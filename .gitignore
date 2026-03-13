@@ -1,16 +1,38 @@
-# Compiled class file
+# ==================== Compiled output ====================
 *.class
+target/
 
-# Log file
+# ==================== IDE files ====================
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+*.swp
+*.swo
+*~
+
+# ==================== Maven ====================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ==================== Spring Boot ====================
+application-local.properties
+application-prod.properties
 *.log
 
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
+# ==================== Package files ====================
 *.jar
 *.war
 *.nar
@@ -19,6 +41,18 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# ==================== OS generated ====================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ==================== Upload directory ====================
+uploads/
+
+# ==================== Lucene index ====================
+lucene-index/
+
+# ==================== JVM crash logs ====================
 hs_err_pid*
 replay_pid*

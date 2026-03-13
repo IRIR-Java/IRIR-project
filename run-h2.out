@@ -1,0 +1,14 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.3)
+
+2026-03-13T17:29:31.356+03:00  INFO 21804 --- [IRIR] [           main] com.chuka.irir.IrirApplication           : Starting IrirApplication v1.0.0-SNAPSHOT using Java 17.0.18 with PID 21804 (C:\Users\ADMIN\OneDrive\Desktop\OSBORN\CS\Course Work\3.2\COSC 381 (Java)\IRIR Project\target\irir-1.0.0-SNAPSHOT.jar started by ADMIN in C:\Users\ADMIN\OneDrive\Desktop\OSBORN\CS\Course Work\3.2\COSC 381 (Java)\IRIR Project)
+2026-03-13T17:29:31.366+03:00 DEBUG 21804 --- [IRIR] [           main] com.chuka.irir.IrirApplication           : Running with Spring Boot v3.2.3, Spring v6.1.4
+2026-03-13T17:29:31.368+03:00  INFO 21804 --- [IRIR] [           main] com.chuka.irir.IrirApplication           : The following 1 profile is active: "h2"
+2026-03-13T17:29:34.387+03:00  INFO 21804 --- [IRIR] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-13T17:29:34.554+03:00  INFO 21804 --- [IRIR] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 136 ms. Found 6 JPA repository interfaces.
