@@ -11,6 +11,8 @@ intelligent research and innovation repository (irir) is a spring boot web app f
 
 the app uses thymeleaf for server-side rendering, spring security for authentication, and spring data jpa for persistence.
 
+![Dashboard](screenshots/dashboard.png)
+
 ---
 
 ## at a glance
