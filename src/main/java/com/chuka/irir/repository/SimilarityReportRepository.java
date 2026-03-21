@@ -17,6 +17,14 @@ public interface SimilarityReportRepository extends JpaRepository<SimilarityRepo
     /** Find all similarity reports for a source project, ordered by score descending. */
     List<SimilarityReport> findBySourceProjectIdOrderBySimilarityScoreDesc(Long sourceProjectId);
 
+    /** Eagerly fetch reports with target project and its author — avoids LazyInitializationException. */
+    @Query("SELECT sr FROM SimilarityReport sr " +
+           "JOIN FETCH sr.targetProject tp " +
+           "LEFT JOIN FETCH tp.submittedBy " +
+           "WHERE sr.sourceProject.id = :projectId " +
+           "ORDER BY sr.similarityScore DESC")
+    List<SimilarityReport> findBySourceProjectIdWithDetails(@Param("projectId") Long projectId);
+
     /** Find all flagged similarity reports (score above threshold). */
     List<SimilarityReport> findByFlaggedTrueOrderBySimilarityScoreDesc();
 

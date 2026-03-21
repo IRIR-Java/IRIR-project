@@ -29,9 +29,17 @@
                 <i class="bi bi-check-circle me-2"></i>
                 <span th:text="${successMessage}">Success</span>
             </div>
+            <div th:if="${warningMessage}" class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span th:text="${warningMessage}">Warning</span>
+            </div>
             <div th:if="${project.status.name() == 'DRAFT'}" class="alert alert-warning">
                 <i class="bi bi-exclamation-circle me-2"></i>
                 This project is still a draft. Submit it to your lecturer when you are ready.
+            </div>
+            <div th:if="${project.status.name() == 'FLAGGED'}" class="alert alert-danger">
+                <i class="bi bi-flag-fill me-2"></i>
+                <strong>Project Flagged</strong> &mdash; This project has been held for supervisor review due to high similarity with existing projects.
             </div>
             <div th:if="${project.status.name() == 'SUBMITTED' || project.status.name() == 'UNDER_REVIEW'}" class="alert alert-info">
                 <i class="bi bi-send-check me-2"></i>
@@ -133,6 +141,76 @@
                 </div>
 
                 <div class="col-lg-4">
+                    <!-- Similarity Report Card — shown for any project that has been submitted -->
+                    <div class="content-card mb-4" th:if="${project.status.name() != 'DRAFT'}">
+                        <div class="content-card-header">
+                            <h2><i class="bi bi-diagram-3 me-2"></i>Similarity Report</h2>
+                        </div>
+                        <div class="content-card-body">
+                            <!-- Verdict Badge -->
+                            <div class="text-center mb-3">
+                                <span class="badge fs-6 px-3 py-2"
+                                      th:classappend="${verdictLabel == 'Original Work'} ? 'bg-success' :
+                                                     (${verdictLabel == 'Similar Work Detected'} ? 'bg-warning text-dark' : 'bg-danger')"
+                                      th:text="${verdictLabel}">Verdict</span>
+                            </div>
+
+                            <!-- Score Display -->
+                            <div class="text-center mb-2">
+                                <span class="fs-3 fw-bold"
+                                      th:classappend="${maxSimilarityScore != null && maxSimilarityScore >= 0.70} ? 'text-danger' :
+                                                     (${maxSimilarityScore != null && maxSimilarityScore >= 0.40} ? 'text-warning' : 'text-success')"
+                                      th:text="${maxSimilarityScore != null ? #numbers.formatDecimal(maxSimilarityScore * 100, 1, 1) + '%' : '0.0%'}">0.0%</span>
+                                <div class="text-muted small">Maximum Similarity Score</div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar"
+                                     role="progressbar"
+                                     th:classappend="${maxSimilarityScore != null && maxSimilarityScore >= 0.70} ? 'bg-danger' :
+                                                    (${maxSimilarityScore != null && maxSimilarityScore >= 0.40} ? 'bg-warning' : 'bg-success')"
+                                     th:style="'width: ' + ${maxSimilarityScore != null ? #numbers.formatDecimal(maxSimilarityScore * 100, 1, 0) : '0'} + '%'"
+                                     th:attr="aria-valuenow=${maxSimilarityScore != null ? maxSimilarityScore * 100 : 0}"
+                                     aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+
+                            <!-- Threshold Legend -->
+                            <div class="small text-muted mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span><span class="badge bg-success">&nbsp;</span> &lt; 40%</span>
+                                    <span><span class="badge bg-warning">&nbsp;</span> 40-69%</span>
+                                    <span><span class="badge bg-danger">&nbsp;</span> &ge; 70%</span>
+                                </div>
+                            </div>
+
+                            <!-- Matched Projects Table -->
+                            <div th:if="${similarityReports != null && !similarityReports.isEmpty()}">
+                                <h6 class="fw-semibold mb-2">Matched Projects</h6>
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item px-0 py-2 border-0" th:each="report : ${similarityReports}">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="me-2" style="min-width: 0;">
+                                                <div class="fw-semibold text-truncate" th:text="${report.targetProject.title}">Title</div>
+                                                <div class="text-muted small" th:if="${report.targetProject.submittedBy != null}"
+                                                     th:text="'by ' + ${report.targetProject.submittedBy.firstName} + ' ' + ${report.targetProject.submittedBy.lastName}">by Author</div>
+                                            </div>
+                                            <span class="badge flex-shrink-0"
+                                                  th:classappend="${report.similarityScore >= 0.70} ? 'bg-danger' :
+                                                                 (${report.similarityScore >= 0.40} ? 'bg-warning text-dark' : 'bg-success')"
+                                                  th:text="${#numbers.formatDecimal(report.similarityScore * 100, 1, 1) + '%'}">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:if="${similarityReports == null || similarityReports.isEmpty()}" class="text-muted small">
+                                No similar projects found.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Collaborator Recommendations Card -->
                     <div class="content-card">
                         <div class="content-card-header">
                             <h2><i class="bi bi-people me-2"></i>Collaborator Recommendations</h2>

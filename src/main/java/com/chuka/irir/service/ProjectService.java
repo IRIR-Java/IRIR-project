@@ -1,6 +1,7 @@
 package com.chuka.irir.service;
 
 import com.chuka.irir.dto.ProjectCreateDto;
+import com.chuka.irir.dto.SimilarityResult;
 import com.chuka.irir.exception.FileStorageException;
 import com.chuka.irir.exception.ResourceNotFoundException;
 import com.chuka.irir.model.Project;
@@ -30,11 +31,17 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final FileStorageService fileStorageService;
+    private final LuceneIndexService luceneIndexService;
+    private final SimilarityDetectionService similarityDetectionService;
 
     public ProjectService(ProjectRepository projectRepository,
-                          FileStorageService fileStorageService) {
+                          FileStorageService fileStorageService,
+                          LuceneIndexService luceneIndexService,
+                          SimilarityDetectionService similarityDetectionService) {
         this.projectRepository = projectRepository;
         this.fileStorageService = fileStorageService;
+        this.luceneIndexService = luceneIndexService;
+        this.similarityDetectionService = similarityDetectionService;
     }
 
     /**
@@ -82,6 +89,18 @@ public class ProjectService {
 
         Project saved = projectRepository.save(project);
         logger.info("Project created by {}: {}", submittedBy.getEmail(), saved.getTitle());
+
+        // Index the document in Lucene for future similarity checks
+        if (saved.getExtractedText() != null && !saved.getExtractedText().isBlank()) {
+            try {
+                luceneIndexService.indexDocument(saved, saved.getExtractedText());
+                logger.debug("Indexed new project [id={}] in Lucene", saved.getId());
+            } catch (Exception e) {
+                // Don't fail the project creation if indexing fails — log and continue
+                logger.error("Failed to index project [id={}] in Lucene: {}", saved.getId(), e.getMessage());
+            }
+        }
+
         return saved;
     }
 
@@ -150,6 +169,18 @@ public class ProjectService {
 
     /**
      * Final submission of a draft project.
+     *
+     * <p>After setting the status to SUBMITTED, the system performs an automatic
+     * similarity check (UC-02) against all indexed documents. Based on the score:
+     * <ul>
+     *   <li>Score &lt; 0.40 → "Original Work" — index the document, no flag</li>
+     *   <li>Score 0.40–0.69 → "Similar Work Detected" — warn, index, allow</li>
+     *   <li>Score ≥ 0.70 → "Potential Duplicate" → set status to FLAGGED, persist reports</li>
+     * </ul></p>
+     *
+     * @param projectId the project to submit
+     * @param student   the student submitting the project
+     * @return the saved project with updated status and (optionally) similarity results
      */
     public Project submitProject(Long projectId, User student) {
         Project project = getProjectForStudent(projectId, student);
@@ -159,10 +190,52 @@ public class ProjectService {
         if (project.getFiles() == null || project.getFiles().isEmpty()) {
             throw new FileStorageException("At least one file is required before submission.");
         }
+
         project.setStatus(ProjectStatus.SUBMITTED);
         project.setSubmittedAt(LocalDateTime.now());
+
+        // ---- UC-02: Automatic Similarity Detection ----
+        if (project.getExtractedText() != null && !project.getExtractedText().isBlank()) {
+            try {
+                SimilarityResult result = similarityDetectionService.checkSimilarity(
+                        project.getExtractedText(), project.getId());
+
+                // Persist similarity reports for all matches
+                similarityDetectionService.buildSimilarityReport(result, project);
+
+                // Apply threshold-based behavior
+                if (result.getAboveThreshold()) {
+                    // Score >= 0.70 → "Potential Duplicate" → hold for supervisor review
+                    project.setStatus(ProjectStatus.FLAGGED);
+                    logger.warn("Project [id={}, title='{}'] FLAGGED — similarity score {} ({})",
+                            project.getId(), project.getTitle(),
+                            result.getMaxSimilarityScore(), result.getVerdictLabel());
+                    // TODO: Send email notification to supervisor (UC-03)
+                } else if (result.getMaxSimilarityScore() >= 0.40) {
+                    // Score 0.40–0.69 → "Similar Work Detected" → warn, allow submission
+                    logger.info("Project [id={}] has moderate similarity ({}): {}",
+                            project.getId(), result.getMaxSimilarityScore(), result.getVerdictLabel());
+                } else {
+                    // Score < 0.40 → "Original Work" → auto-approve for indexing
+                    logger.info("Project [id={}] is original work (score={})",
+                            project.getId(), result.getMaxSimilarityScore());
+                }
+
+                // Index the submitted document (unless it's flagged as a potential duplicate)
+                if (project.getStatus() != ProjectStatus.FLAGGED) {
+                    luceneIndexService.indexDocument(project, project.getExtractedText());
+                }
+
+            } catch (Exception e) {
+                // Don't fail the submission if the similarity check fails
+                logger.error("Similarity check failed for project [id={}]: {}",
+                        project.getId(), e.getMessage(), e);
+            }
+        }
+
         Project saved = projectRepository.save(project);
-        logger.info("Project submitted by {}: {}", student.getEmail(), saved.getTitle());
+        logger.info("Project submitted by {}: {} (status={})",
+                student.getEmail(), saved.getTitle(), saved.getStatus());
         return saved;
     }
 

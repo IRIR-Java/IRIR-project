@@ -87,6 +87,11 @@ public class SecurityConfig {
             // Authentication provider
             .authenticationProvider(authenticationProvider())
 
+            // Disable CSRF for REST API endpoints (dev testing via curl/Postman)
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/api/**")
+            )
+
             // ---- URL-based Access Control (RBAC) ----
             .authorizeHttpRequests(auth -> auth
                 // Public pages — accessible without authentication
@@ -96,8 +101,8 @@ public class SecurityConfig {
                     "/webjars/**", "/error/**"
                 ).permitAll()
 
-                // Student-only pages
-                .requestMatchers("/student/**").hasRole("STUDENT")
+                // Student pages — accessible by STUDENT and ADMIN (for testing)
+                .requestMatchers("/student/**").hasAnyRole("STUDENT", "ADMIN")
 
                 // Supervisor-only pages
                 .requestMatchers("/supervisor/**").hasRole("SUPERVISOR")
@@ -107,6 +112,9 @@ public class SecurityConfig {
 
                 // Admin-only pages
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                // Dev API endpoints — restricted to ADMIN
+                .requestMatchers("/api/dev/**").hasRole("ADMIN")
 
                 // All other pages require authentication
                 .anyRequest().authenticated()
