@@ -31,8 +31,11 @@ public final class AppConstants {
 
     // -------------------- Similarity Detection --------------------
 
-    /** Default cosine-similarity threshold for flagging potential duplicates. */
-    public static final double DEFAULT_SIMILARITY_THRESHOLD = 0.75;
+    /** Default cosine-similarity threshold for flagging potential duplicates (≥ 0.70). */
+    public static final double DEFAULT_SIMILARITY_THRESHOLD = 0.70;
+
+    /** Default cosine-similarity threshold for warning about similar work (≥ 0.40). */
+    public static final double DEFAULT_WARNING_THRESHOLD = 0.40;
 
     /** Maximum number of similar projects returned per check. */
     public static final int MAX_SIMILARITY_RESULTS = 10;

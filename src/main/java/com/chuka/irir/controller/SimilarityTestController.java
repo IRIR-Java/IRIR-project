@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.transaction.annotation.Transactional;
+
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/dev/similarity")
-@Transactional(readOnly = true)
 public class SimilarityTestController {
 
     private static final Logger logger = LoggerFactory.getLogger(SimilarityTestController.class);
@@ -123,16 +122,17 @@ public class SimilarityTestController {
                 stats.put("maxDoc", reader.maxDoc());
                 stats.put("hasDeletions", reader.hasDeletions());
                 reader.close();
+                stats.put("status", "ok");
             } else {
                 stats.put("documentCount", 0);
+                stats.put("status", "error");
                 stats.put("error", "Lucene directory not initialized");
             }
         } catch (IOException e) {
             stats.put("documentCount", 0);
+            stats.put("status", "error");
             stats.put("error", e.getMessage());
         }
-
-        stats.put("status", "ok");
         return ResponseEntity.ok(stats);
     }
 }
