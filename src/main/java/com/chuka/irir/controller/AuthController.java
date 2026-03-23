@@ -1,30 +1,23 @@
 package com.chuka.irir.controller;
 
 import com.chuka.irir.dto.UserRegistrationDto;
+import com.chuka.irir.service.PasswordResetService;
 import com.chuka.irir.service.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * Controller for authentication pages: login, registration, and logout.
- *
- * Handles:
- * <ul>
- *   <li>GET /login — renders the login form</li>
- *   <li>GET /register — renders the registration form</li>
- *   <li>POST /register — processes new student registration</li>
- * </ul>
- *
- * <p>Login POST is handled by Spring Security's form login filter
- * (configured in {@link com.chuka.irir.config.SecurityConfig}).</p>
+ * Controller for authentication pages: login, registration, logout, and password reset.
  */
 @Controller
 public class AuthController {
@@ -33,59 +26,37 @@ public class AuthController {
 
     private final UserService userService;
 
+    @Autowired
+    private PasswordResetService passwordResetService;
+
     public AuthController(UserService userService) {
         this.userService = userService;
     }
 
     // ==================== Login ====================
 
-    /**
-     * Displays the login page.
-     * Spring Security handles the actual authentication via POST /login.
-     *
-     * @return the login template name
-     */
     @GetMapping("/login")
     public String showLoginPage() {
-        return "login";
+        return "login"; // handled by Spring Security POST /login
     }
 
     // ==================== Registration ====================
 
-    /**
-     * Displays the student registration form.
-     *
-     * @param model the Spring MVC model
-     * @return the register template name
-     */
     @GetMapping("/register")
     public String showRegistrationForm(Model model) {
         model.addAttribute("user", new UserRegistrationDto());
         return "register";
     }
 
-    /**
-     * Processes the student registration form submission.
-     *
-     * Validates form data, checks for duplicate email/studentId,
-     * hashes the password with BCrypt, and creates the user with STUDENT role.
-     *
-     * @param userDto            the form data bound to {@link UserRegistrationDto}
-     * @param bindingResult      validation results
-     * @param redirectAttributes flash attributes for success/error messages
-     * @return redirect to login on success, or back to register form on error
-     */
     @PostMapping("/register")
     public String registerStudent(@Valid @ModelAttribute("user") UserRegistrationDto userDto,
                                   BindingResult bindingResult,
                                   RedirectAttributes redirectAttributes) {
 
-        // Check for validation errors from @Valid annotations
         if (bindingResult.hasErrors()) {
             return "register";
         }
 
-        // Check password confirmation match
         if (!userDto.getPassword().equals(userDto.getConfirmPassword())) {
             bindingResult.rejectValue("confirmPassword", "error.user", "Passwords do not match");
             return "register";
@@ -104,5 +75,60 @@ public class AuthController {
             bindingResult.rejectValue("email", "error.user", e.getMessage());
             return "register";
         }
+    }
+
+    // ==================== Forgot Password ====================
+
+    @GetMapping("/forgot-password")
+    public String showForgotPasswordForm() {
+        return "forgot-password";
+    }
+
+    @PostMapping("/forgot-password")
+    public String processForgotPassword(@RequestParam("email") String email,
+                                        RedirectAttributes redirectAttributes) {
+        try {
+            passwordResetService.initiatePasswordReset(email);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Reset link sent to " + email + ". Check your inbox.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/forgot-password";
+    }
+
+    // ==================== Reset Password ====================
+
+    @GetMapping("/reset-password")
+    public String showResetPasswordForm(@RequestParam("token") String token, Model model,
+                                        RedirectAttributes redirectAttributes) {
+        if (!passwordResetService.isTokenValid(token)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Invalid or expired token.");
+            return "redirect:/login";
+        }
+        model.addAttribute("token", token);
+        return "reset-password";
+    }
+
+    @PostMapping("/reset-password")
+    public String processResetPassword(@RequestParam("token") String token,
+                                       @RequestParam("newPassword") String newPassword,
+                                       @RequestParam("confirmPassword") String confirmPassword,
+                                       RedirectAttributes redirectAttributes) {
+
+        if (!newPassword.equals(confirmPassword)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Passwords do not match.");
+            return "redirect:/reset-password?token=" + token;
+        }
+
+        try {
+            passwordResetService.resetPassword(token, newPassword);
+            redirectAttributes.addFlashAttribute("successMessage", "Password reset successful! Please log in.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/reset-password?token=" + token;
+        }
+
+        return "redirect:/login";
     }
 }
