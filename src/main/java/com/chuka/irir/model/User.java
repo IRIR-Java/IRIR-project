@@ -91,6 +91,15 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "phone_number", length = 20)
+    private String phoneNumber;
+
+    @Column(name = "profile_photo_url")
+    private String profilePhotoUrl;
+
+    @Column(name = "research_interests", length = 500)
+    private String researchInterests;
+
     // ==================== Lifecycle Callbacks ====================
 
     @PrePersist

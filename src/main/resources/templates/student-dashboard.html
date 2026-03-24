@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Portal - IRIR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .nav-tabs .nav-link { 
+            color: #495057; 
+            font-weight: 500; 
+            border: none; 
+            border-bottom: 3px solid transparent; 
+            padding: 1rem 1.5rem; 
+        }
+        .nav-tabs .nav-link:hover { 
+            border-color: transparent; 
+            background-color: #f8f9fa; 
+        }
+        .nav-tabs .nav-link.active { 
+            color: #0d6efd; 
+            font-weight: 600; 
+            border: none; 
+            border-bottom: 3px solid #0d6efd; 
+            background-color: transparent; 
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="/student/dashboard"><i class="bi bi-mortarboard-fill"></i> IRIR Portal</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i> <span th:text="${student.firstName}">Student</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/student/profile">Edit Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mb-5">
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs mb-4 border-bottom-0 shadow-sm bg-white rounded" id="portalTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" th:classappend="${activeTab == 'dashboard' ? 'active' : ''}" 
+               id="dashboard-tab" data-bs-toggle="tab" href="#dashboard-pane" role="tab" aria-controls="dashboard-pane" 
+               th:attr="aria-selected=${activeTab == 'dashboard'}">
+                <i class="bi bi-speedometer2"></i> My Dashboard
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" th:classappend="${activeTab == 'gallery' ? 'active' : ''}" 
+               id="gallery-tab" data-bs-toggle="tab" href="#gallery-pane" role="tab" aria-controls="gallery-pane" 
+               th:attr="aria-selected=${activeTab == 'gallery'}">
+                <i class="bi bi-globe"></i> Project Gallery Search
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="portalTabsContent">
+
+        <!-- ============================= -->
+        <!-- TAB 1: DASHBOARD PANE -->
+        <!-- ============================= -->
+        <div class="tab-pane fade" th:classappend="${activeTab == 'dashboard' ? 'show active' : ''}" id="dashboard-pane" role="tabpanel" aria-labelledby="dashboard-tab">
+            <div class="row">
+                
+                <!-- Dashboard Main Content Column -->
+                <div class="col-lg-9 mb-4">
+                    
+                    <div th:if="${hasWarnings}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i> <strong>Warning:</strong> One or more of your projects has been FLAGGED for high similarity. Check details below.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Stats Row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0 border-start border-primary border-4 text-center h-100 py-2">
+                                <div class="card-body">
+                                    <h6 class="text-uppercase text-muted fw-bold mb-1">Projects</h6>
+                                    <h3 class="fw-bold mb-0 text-dark" th:text="${totalProjects}">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0 border-start border-success border-4 text-center h-100 py-2">
+                                <div class="card-body">
+                                    <h6 class="text-uppercase text-muted fw-bold mb-1">Total Views</h6>
+                                    <h3 class="fw-bold mb-0 text-dark" th:text="${totalViews}">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0 border-start border-info border-4 text-center h-100 py-2">
+                                <div class="card-body">
+                                    <h6 class="text-uppercase text-muted fw-bold mb-1">Downloads</h6>
+                                    <h3 class="fw-bold mb-0 text-dark" th:text="${totalDownloads}">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0 border-start border-warning border-4 text-center h-100 py-2">
+                                <div class="card-body">
+                                    <h6 class="text-uppercase text-muted fw-bold mb-1">Pending Review</h6>
+                                    <h3 class="fw-bold mb-0 text-dark" th:text="${pendingReviews}">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Projects Table -->
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-journal-text"></i> My Projects</h5>
+                            <a href="/student/project/new" class="btn btn-sm btn-primary"><i class="bi bi-plus"></i> New Upload</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-4">Title</th>
+                                            <th>Status</th>
+                                            <th>Views</th>
+                                            <th>Downloads</th>
+                                            <th class="pe-4 text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${#lists.isEmpty(projects)}">
+                                            <td colspan="5" class="text-center text-muted py-4">No projects uploaded yet.</td>
+                                        </tr>
+                                        <tr th:each="project : ${projects}">
+                                            <td class="ps-4 fw-medium text-truncate" style="max-width: 250px;" th:text="${project.title}">Project Title</td>
+                                            <td>
+                                                <span th:classappend="
+                                                    ${project.status.name() == 'DRAFT' ? 'bg-secondary' : ''} +
+                                                    ${project.status.name() == 'SUBMITTED' ? 'bg-info text-dark' : ''} +
+                                                    ${project.status.name() == 'UNDER_REVIEW' ? 'bg-warning text-dark' : ''} +
+                                                    ${project.status.name() == 'APPROVED' ? 'bg-success' : ''} +
+                                                    ${project.status.name() == 'REJECTED' ? 'bg-danger' : ''} +
+                                                    ${project.status.name() == 'FLAGGED' ? 'bg-danger' : ''} +
+                                                    ${project.status.name() == 'INCUBATION' ? 'bg-primary' : ''}
+                                                    " class="badge rounded-pill" th:text="${project.status}">STATUS</span>
+                                            </td>
+                                            <td th:text="${project.viewCount}">0</td>
+                                            <td th:text="${project.downloadCount}">0</td>
+                                            <td class="pe-4 text-end">
+                                                <a th:href="@{/student/project/{id}/analytics(id=${project.id})}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-graph-up"></i> Analytics</a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Dashboard Right Sidebar Column -->
+                <div class="col-lg-3">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-people-fill"></i> Collab Requests</h5>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${#lists.isEmpty(collabRequests)}" class="text-muted small">No requests found.</div>
+                            <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(collabRequests)}">
+                                <li class="list-group-item px-0 border-0 mb-2" th:each="msg : ${collabRequests}">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <small class="text-dark fw-semibold" th:text="${msg}">Message details here...</small>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button class="btn btn-xs btn-primary py-0" style="font-size: 0.75rem;">Accept</button>
+                                        <button class="btn btn-xs btn-outline-danger py-0" style="font-size: 0.75rem;">Decline</button>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="card shadow-sm border-0 mt-4">
+                         <div class="card-body bg-light text-center border rounded">
+                             <i class="bi bi-lightbulb text-warning fs-1"></i>
+                             <h6 class="mt-2 text-dark">Did you know?</h6>
+                             <p class="small text-muted mb-0">Including diverse keywords helps our recommendation engine match you with peers in other departments!</p>
+                         </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        <!-- END DASHBOARD PANE -->
+
+
+        <!-- ============================= -->
+        <!-- TAB 2: GALLERY PANE -->
+        <!-- ============================= -->
+        <div class="tab-pane fade" th:classappend="${activeTab == 'gallery' ? 'show active' : ''}" id="gallery-pane" role="tabpanel" aria-labelledby="gallery-tab">
+            <div class="row">
+                
+                <!-- Filter Sidebar -->
+                <div class="col-lg-3">
+                    <div class="card shadow-sm mb-4 border-0">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold mb-3"><i class="bi bi-funnel"></i> Filters</h5>
+                            <form th:action="@{/student/dashboard}" method="get" th:object="${searchCriteria}">
+                                <input type="hidden" name="tab" value="gallery" />
+                                
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small fw-semibold">Search Query</label>
+                                    <input type="text" class="form-control" th:field="*{query}" placeholder="Title, keywords...">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small fw-semibold">Department</label>
+                                    <select class="form-select" th:field="*{department}">
+                                        <option value="">All Departments</option>
+                                        <option value="Computer Science">Computer Science</option>
+                                        <option value="Information Technology">Information Technology</option>
+                                        <option value="Software Engineering">Software Engineering</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small fw-semibold">Year</label>
+                                    <input type="number" class="form-control" th:field="*{year}" placeholder="e.g. 2025">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small fw-semibold">Author Name</label>
+                                    <input type="text" class="form-control" th:field="*{author}" placeholder="Student Name">
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Search Projects</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Results -->
+                <div class="col-lg-9">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold m-0" th:text="${results.totalElements} + ' Projects Found'">Projects Found</h4>
+                    </div>
+
+                    <div th:each="project : ${results.content}" class="card shadow-sm border-0 mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title mb-1">
+                                    <a th:href="@{/gallery/{id}(id=${project.projectId})}" th:text="${project.title}" class="text-decoration-none fw-bold text-dark">Project Title</a>
+                                </h5>
+                                <span th:if="${project.isSimilarityFree}" class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 ms-2"><i class="bi bi-shield-check"></i> Verified Original</span>
+                            </div>
+                            
+                            <div class="mb-3 text-muted fw-semibold small">
+                                <i class="bi bi-person"></i> <span th:text="${project.author}">Author</span> &bull; 
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary" th:text="${project.department}">Department</span> &bull;
+                                <i class="bi bi-calendar"></i> <span th:text="${project.year}">Year</span> &bull; 
+                                <i class="bi bi-eye"></i> <span th:text="${project.viewCount}">Views</span>
+                            </div>
+
+                            <p class="card-text text-secondary mb-0">
+                                <span th:utext="${project.highlightedText}">Project abstract excerpt with <mark class="bg-warning fw-bold">highlighted</mark> terms...</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <nav th:if="${results.totalPages > 1}" aria-label="Search results pages">
+                        <ul class="pagination justify-content-center mt-4 border-0">
+                            <li class="page-item" th:classappend="${results.first ? 'disabled' : ''}">
+                                <a class="page-link" th:href="@{/student/dashboard(tab='gallery', query=${searchCriteria.query}, department=${searchCriteria.department}, year=${searchCriteria.year}, author=${searchCriteria.author}, page=${results.number})}">&laquo; Prev</a>
+                            </li>
+                            <li th:each="i : ${#numbers.sequence(1, results.totalPages)}" 
+                                class="page-item" th:classappend="${results.number + 1 == i ? 'active' : ''}">
+                                <a class="page-link" th:href="@{/student/dashboard(tab='gallery', query=${searchCriteria.query}, department=${searchCriteria.department}, year=${searchCriteria.year}, author=${searchCriteria.author}, page=${i})}" th:text="${i}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${results.last ? 'disabled' : ''}">
+                                <a class="page-link" th:href="@{/student/dashboard(tab='gallery', query=${searchCriteria.query}, department=${searchCriteria.department}, year=${searchCriteria.year}, author=${searchCriteria.author}, page=${results.number + 2})}">Next &raquo;</a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                </div>
+            </div>
+        </div>
+        <!-- END GALLERY PANE -->
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
