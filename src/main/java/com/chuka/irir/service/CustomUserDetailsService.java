@@ -1,5 +1,6 @@
 package com.chuka.irir.service;
 
+import com.chuka.irir.model.Role;
 import com.chuka.irir.model.User;
 import com.chuka.irir.repository.UserRepository;
 import org.slf4j.Logger;
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * Custom implementation of Spring Security's {@link UserDetailsService}.
@@ -52,10 +53,11 @@ public class CustomUserDetailsService implements UserDetailsService {
                     return new UsernameNotFoundException("User not found with email: " + email);
                 });
 
-        // Map IRIR roles to Spring Security granted authorities
-        Collection<? extends GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
-                .collect(Collectors.toSet());
+        // Map IRIR role enum to Spring Security granted authority
+        Role role = user.getRole();
+        Collection<? extends GrantedAuthority> authorities = List.of(
+                new SimpleGrantedAuthority("ROLE_" + (role != null ? role.name() : "STUDENT"))
+        );
 
         logger.debug("User '{}' authenticated successfully with roles: {}", email, authorities);
 

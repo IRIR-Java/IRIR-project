@@ -2,7 +2,6 @@ package com.chuka.irir.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -18,11 +17,22 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "project_files")
-@Getter @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class ProjectFile {
+
+    public ProjectFile() {
+    }
+
+    public ProjectFile(Long id, Project project, String fileName,
+                       String fileType, String storagePath, Long fileSize,
+                       LocalDateTime uploadedAt) {
+        this.id = id;
+        this.project = project;
+        this.fileName = fileName;
+        this.fileType = fileType;
+        this.storagePath = storagePath;
+        this.fileSize = fileSize;
+        this.uploadedAt = uploadedAt;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,4 +68,26 @@ public class ProjectFile {
     protected void onCreate() {
         this.uploadedAt = LocalDateTime.now();
     }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Project getProject() { return project; }
+    public void setProject(Project project) { this.project = project; }
+
+    public String getFileName() { return fileName; }
+    public void setFileName(String fileName) { this.fileName = fileName; }
+
+    public String getFileType() { return fileType; }
+    public void setFileType(String fileType) { this.fileType = fileType; }
+
+    public String getStoragePath() { return storagePath; }
+    public void setStoragePath(String storagePath) { this.storagePath = storagePath; }
+
+    public Long getFileSize() { return fileSize; }
+    public void setFileSize(Long fileSize) { this.fileSize = fileSize; }
+
+    public LocalDateTime getUploadedAt() { return uploadedAt; }
+    public void setUploadedAt(LocalDateTime uploadedAt) { this.uploadedAt = uploadedAt; }
 }
+

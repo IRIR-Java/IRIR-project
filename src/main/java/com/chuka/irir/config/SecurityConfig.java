@@ -133,8 +133,11 @@ public class SecurityConfig {
 
             // ---- Session Management ----
             .sessionManagement(session -> session
-                .maximumSessions(1)                           // One session per user
-                .expiredUrl("/login?expired=true")             // Redirect on session expiry
+                .invalidSessionUrl("/login?invalid=true")      // Redirect on invalid session
+                .sessionFixation().migrateSession()             // Prevent session fixation
+                .maximumSessions(1)                             // One session per user
+                .expiredUrl("/login?expired=true")            // Redirect on concurrent session expiry
+                .maxSessionsPreventsLogin(true)
             )
 
             // ---- Security Headers ----
@@ -148,7 +151,8 @@ public class SecurityConfig {
                         "img-src 'self' data:;"
                     )
                 )
-                .frameOptions(frame -> frame.deny())          // Prevent clickjacking
+                .frameOptions(frame -> frame.deny())          // Prevent clickjacking (X-Frame-Options)
+                .contentTypeOptions()                         // X-Content-Type-Options: nosniff
             );
 
         return http.build();

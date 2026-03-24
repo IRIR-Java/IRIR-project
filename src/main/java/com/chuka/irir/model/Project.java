@@ -3,7 +3,6 @@ package com.chuka.irir.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,11 +24,31 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "projects")
-@Getter @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Project {
+
+    public Project() {
+    }
+
+    public Project(Long id, String title, String abstractText, ProjectStatus status, User submittedBy,
+                   User supervisor, Integer academicYear, Set<String> keywords, String extractedText,
+                   List<ProjectFile> files, List<Review> reviews, List<SimilarityReport> similarityReports,
+                   LocalDateTime submittedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.title = title;
+        this.abstractText = abstractText;
+        this.status = status;
+        this.submittedBy = submittedBy;
+        this.supervisor = supervisor;
+        this.academicYear = academicYear;
+        this.keywords = keywords != null ? keywords : new HashSet<>();
+        this.extractedText = extractedText;
+        this.files = files != null ? files : new ArrayList<>();
+        this.reviews = reviews != null ? reviews : new ArrayList<>();
+        this.similarityReports = similarityReports != null ? similarityReports : new ArrayList<>();
+        this.submittedAt = submittedAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,7 +67,6 @@ public class Project {
     /** Current status in the submission lifecycle. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    @Builder.Default
     private ProjectStatus status = ProjectStatus.DRAFT;
 
     /** The student who submitted this project. */
@@ -73,7 +91,6 @@ public class Project {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "project_keywords", joinColumns = @JoinColumn(name = "project_id"))
     @Column(name = "keyword", length = 100)
-    @Builder.Default
     private Set<String> keywords = new HashSet<>();
 
     /** Full text extracted from uploaded files (via Apache Tika). Used for similarity detection. */
@@ -82,17 +99,14 @@ public class Project {
 
     /** Files attached to this project (PDF, DOCX, ZIP). */
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private List<ProjectFile> files = new ArrayList<>();
 
     /** Reviews made by supervisors or directorate members. */
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private List<Review> reviews = new ArrayList<>();
 
     /** Similarity reports comparing this project against others in the repository. */
     @OneToMany(mappedBy = "sourceProject", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private List<SimilarityReport> similarityReports = new ArrayList<>();
 
     @Column(name = "submitted_at")
@@ -130,4 +144,49 @@ public class Project {
         files.remove(file);
         file.setProject(null);
     }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getAbstractText() { return abstractText; }
+    public void setAbstractText(String abstractText) { this.abstractText = abstractText; }
+
+    public ProjectStatus getStatus() { return status; }
+    public void setStatus(ProjectStatus status) { this.status = status; }
+
+    public User getSubmittedBy() { return submittedBy; }
+    public void setSubmittedBy(User submittedBy) { this.submittedBy = submittedBy; }
+
+    public User getSupervisor() { return supervisor; }
+    public void setSupervisor(User supervisor) { this.supervisor = supervisor; }
+
+    public Integer getAcademicYear() { return academicYear; }
+    public void setAcademicYear(Integer academicYear) { this.academicYear = academicYear; }
+
+    public Set<String> getKeywords() { return keywords; }
+    public void setKeywords(Set<String> keywords) { this.keywords = keywords; }
+
+    public String getExtractedText() { return extractedText; }
+    public void setExtractedText(String extractedText) { this.extractedText = extractedText; }
+
+    public List<ProjectFile> getFiles() { return files; }
+    public void setFiles(List<ProjectFile> files) { this.files = files; }
+
+    public List<Review> getReviews() { return reviews; }
+    public void setReviews(List<Review> reviews) { this.reviews = reviews; }
+
+    public List<SimilarityReport> getSimilarityReports() { return similarityReports; }
+    public void setSimilarityReports(List<SimilarityReport> similarityReports) { this.similarityReports = similarityReports; }
+
+    public LocalDateTime getSubmittedAt() { return submittedAt; }
+    public void setSubmittedAt(LocalDateTime submittedAt) { this.submittedAt = submittedAt; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

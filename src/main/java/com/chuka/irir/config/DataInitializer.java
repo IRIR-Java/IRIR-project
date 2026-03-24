@@ -38,17 +38,17 @@ public class DataInitializer {
             if (userRepository.findByRole(Role.ADMIN).isEmpty()) {
                 logger.info("No admin users found — creating default admin account...");
 
-                User admin = User.builder()
-                        .firstName("System")
-                        .lastName("Administrator")
-                        .email("admin@chuka.ac.ke")
-                        .password(passwordEncoder.encode("Admin@2024"))
-                        .studentId(null)
-                        .department("Computer Science")
-                        .roles(Set.of(Role.ADMIN))
-                        .enabled(true)
-                        .accountNonLocked(true)
-                        .build();
+                User admin = new User();
+                admin.setFirstName("System");
+                admin.setLastName("Administrator");
+                admin.setFullName("System Administrator");
+                admin.setEmail("admin@chuka.ac.ke");
+                admin.setPassword(passwordEncoder.encode("Admin@2024"));
+                admin.setRegNumber("ADMIN");
+                admin.setDepartment("Computer Science");
+                admin.setRole(Role.ADMIN);
+                admin.setEnabled(true);
+                admin.setAccountNonLocked(true);
 
                 userRepository.save(admin);
                 logger.info("Default admin account created: admin@chuka.ac.ke");

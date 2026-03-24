@@ -2,15 +2,11 @@ package com.chuka.irir.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
  * DTO for creating a new student project submission.
  */
-@Getter
-@Setter
 public class ProjectCreateDto {
 
     @NotBlank(message = "Project title is required")
@@ -35,4 +31,45 @@ public class ProjectCreateDto {
      * Uploaded files (PDF, DOCX, ZIP).
      */
     private MultipartFile[] files;
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getAbstractText() {
+        return abstractText;
+    }
+
+    public void setAbstractText(String abstractText) {
+        this.abstractText = abstractText;
+    }
+
+    public String getKeywords() {
+        return keywords;
+    }
+
+    public void setKeywords(String keywords) {
+        this.keywords = keywords;
+    }
+
+    public Integer getAcademicYear() {
+        return academicYear;
+    }
+
+    public void setAcademicYear(Integer academicYear) {
+        this.academicYear = academicYear;
+    }
+
+    public MultipartFile[] getFiles() {
+        return files;
+    }
+
+    public void setFiles(MultipartFile[] files) {
+        this.files = files;
+    }
 }
+

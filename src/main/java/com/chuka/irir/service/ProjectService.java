@@ -59,12 +59,11 @@ public class ProjectService {
         for (MultipartFile file : files) {
             FileStorageService.StoredFile storedFile = fileStorageService.store(file);
 
-            ProjectFile projectFile = ProjectFile.builder()
-                    .fileName(storedFile.originalName())
-                    .fileType(storedFile.contentType())
-                    .fileSize(storedFile.size())
-                    .storagePath(storedFile.storagePath())
-                    .build();
+            ProjectFile projectFile = new ProjectFile();
+            projectFile.setFileName(storedFile.originalName());
+            projectFile.setFileType(storedFile.contentType());
+            projectFile.setFileSize(storedFile.size());
+            projectFile.setStoragePath(storedFile.storagePath());
 
             project.addFile(projectFile);
 
@@ -124,12 +123,11 @@ public class ProjectService {
             for (MultipartFile file : files) {
                 FileStorageService.StoredFile storedFile = fileStorageService.store(file);
 
-                ProjectFile projectFile = ProjectFile.builder()
-                        .fileName(storedFile.originalName())
-                        .fileType(storedFile.contentType())
-                        .fileSize(storedFile.size())
-                        .storagePath(storedFile.storagePath())
-                        .build();
+                ProjectFile projectFile = new ProjectFile();
+                projectFile.setFileName(storedFile.originalName());
+                projectFile.setFileType(storedFile.contentType());
+                projectFile.setFileSize(storedFile.size());
+                projectFile.setStoragePath(storedFile.storagePath());
 
                 project.addFile(projectFile);
 
