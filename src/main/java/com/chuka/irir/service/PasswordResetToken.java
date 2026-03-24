@@ -1,5 +1,6 @@
-package com.chuka.rir.model;
+package com.chuka.irir.service;
 
+import com.chuka.irir.model.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 

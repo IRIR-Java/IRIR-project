@@ -35,4 +35,8 @@ public interface SimilarityReportRepository extends JpaRepository<SimilarityRepo
 
     /** Count flagged reports. Used for dashboard metrics. */
     long countByFlaggedTrue();
+
+    /** Find the maximum similarity score for a given source project. */
+    @Query("SELECT MAX(sr.similarityScore) FROM SimilarityReport sr WHERE sr.sourceProject.id = :projectId")
+    Double findMaxSimilarityScoreByProjectId(@Param("projectId") Long projectId);
 }

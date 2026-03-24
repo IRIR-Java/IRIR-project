@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -21,16 +19,22 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Dev-only REST controller for testing and exploring the similarity detection engine.
+ * Dev-only REST controller for testing and exploring the similarity detection
+ * engine.
  *
- * <p>Provides endpoints to:</p>
+ * <p>
+ * Provides endpoints to:
+ * </p>
  * <ul>
- *   <li>Run a similarity check with arbitrary text (without submitting a project)</li>
- *   <li>View persisted similarity reports for a project</li>
- *   <li>Check Lucene index statistics</li>
+ * <li>Run a similarity check with arbitrary text (without submitting a
+ * project)</li>
+ * <li>View persisted similarity reports for a project</li>
+ * <li>Check Lucene index statistics</li>
  * </ul>
  *
- * <p><b>Access:</b> Restricted to ADMIN role via SecurityConfig.</p>
+ * <p>
+ * <b>Access:</b> Restricted to ADMIN role via SecurityConfig.
+ * </p>
  */
 @RestController
 @RequestMapping("/api/dev/similarity")
@@ -43,8 +47,8 @@ public class SimilarityTestController {
     private final LuceneIndexService luceneIndexService;
 
     public SimilarityTestController(SimilarityDetectionService similarityDetectionService,
-                                     SimilarityReportRepository similarityReportRepository,
-                                     LuceneIndexService luceneIndexService) {
+            SimilarityReportRepository similarityReportRepository,
+            LuceneIndexService luceneIndexService) {
         this.similarityDetectionService = similarityDetectionService;
         this.similarityReportRepository = similarityReportRepository;
         this.luceneIndexService = luceneIndexService;
@@ -53,10 +57,13 @@ public class SimilarityTestController {
     /**
      * Run a similarity check with arbitrary text against the Lucene index.
      *
-     * <p>This allows testing the similarity engine without going through the
-     * full project submission flow.</p>
+     * <p>
+     * This allows testing the similarity engine without going through the
+     * full project submission flow.
+     * </p>
      *
-     * @param request body containing "text" and optional "projectId" (default 0 — matches all)
+     * @param request body containing "text" and optional "projectId" (default 0 —
+     *                matches all)
      * @return SimilarityResult JSON with scores, verdict, and matched projects
      */
     @PostMapping("/test")
@@ -89,7 +96,7 @@ public class SimilarityTestController {
     @GetMapping("/reports/{projectId}")
     public ResponseEntity<List<Map<String, Object>>> getReports(@PathVariable Long projectId) {
         List<SimilarityReport> reports =
-                similarityReportRepository.findBySourceProjectIdOrderBySimilarityScoreDesc(projectId);
+                similarityReportRepository.findBySourceProjectIdWithDetails(projectId);
 
         List<Map<String, Object>> result = reports.stream().map(r -> {
             Map<String, Object> map = new HashMap<>();

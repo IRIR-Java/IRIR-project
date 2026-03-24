@@ -1,9 +1,9 @@
-package com.irir.dto;
+package com.chuka.irir.service;
 
 import jakarta.validation.constraints.Size;
 
 public class FeedbackDTO {
-    
+
     public enum FeedbackAction {
         APPROVED,
         REJECTED,

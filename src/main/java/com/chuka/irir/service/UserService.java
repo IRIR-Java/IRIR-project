@@ -24,8 +24,10 @@ import java.util.Set;
  * Handles user registration, profile updates, role assignment,
  * and account management. All password operations use BCrypt hashing.
  *
- * <p>Integrates with {@link AuditLogRepository} to record significant
- * user-related actions for the admin audit trail.</p>
+ * <p>
+ * Integrates with {@link AuditLogRepository} to record significant
+ * user-related actions for the admin audit trail.
+ * </p>
  */
 @Service
 @Transactional
@@ -38,8 +40,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository,
-                       AuditLogRepository auditLogRepository,
-                       PasswordEncoder passwordEncoder) {
+            AuditLogRepository auditLogRepository,
+            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.auditLogRepository = auditLogRepository;
         this.passwordEncoder = passwordEncoder;
@@ -63,7 +65,7 @@ public class UserService {
                 .email(dto.getEmail())
                 .studentId(dto.getStudentId())
                 .password(passwordEncoder.encode(dto.getPassword())) // BCrypt hash
-                .roles(new HashSet<>(Set.of(Role.STUDENT)))
+                .role(Role.STUDENT)
                 .enabled(true)
                 .accountNonLocked(true)
                 .build();
