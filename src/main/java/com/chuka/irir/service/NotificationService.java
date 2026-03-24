@@ -1,7 +1,7 @@
-package com.irir.service;
+package com.chuka.irir.service;
 
-import com.irir.model.ResearchProject;
-import com.irir.model.User;
+import com.chuka.irir.model.ResearchProject;
+import com.chuka.irir.model.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ public class NotificationService {
 
     public void sendApprovalEmail(User student, ResearchProject project) {
         Context context = new Context();
-        context.setVariable("studentName", student.getName());
+        context.setVariable("studentName", student.getFullName());
         context.setVariable("projectTitle", project.getTitle());
         String process = templateEngine.process("email/approval-email", context);
         sendHtmlMessage(student.getEmail(), "Project Approved!", process);
@@ -30,7 +30,7 @@ public class NotificationService {
 
     public void sendRejectionEmail(User student, ResearchProject project, String reason) {
         Context context = new Context();
-        context.setVariable("studentName", student.getName());
+        context.setVariable("studentName", student.getFullName());
         context.setVariable("projectTitle", project.getTitle());
         context.setVariable("reason", reason);
         String process = templateEngine.process("email/rejection-email", context);
@@ -39,7 +39,7 @@ public class NotificationService {
 
     public void sendIncubationEmail(User student, ResearchProject project) {
         Context context = new Context();
-        context.setVariable("studentName", student.getName());
+        context.setVariable("studentName", student.getFullName());
         context.setVariable("projectTitle", project.getTitle());
         String process = templateEngine.process("email/incubation-email", context);
         sendHtmlMessage(student.getEmail(), "Project Forwarded to Incubation", process);

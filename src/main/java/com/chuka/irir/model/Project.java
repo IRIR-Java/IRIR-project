@@ -122,12 +122,12 @@ public class Project {
     /** Adds a file to this project and sets the back-reference. */
     public void addFile(ProjectFile file) {
         files.add(file);
-        file.setProject(this);
+        // file.setProject(this);
     }
 
     /** Removes a file from this project. */
     public void removeFile(ProjectFile file) {
         files.remove(file);
-        file.setProject(null);
+        // file.setProject(null);
     }
 }
