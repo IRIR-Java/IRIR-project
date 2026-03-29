@@ -8,7 +8,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "similarity_reports")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -25,11 +26,12 @@ public class SimilarityReport {
     @Column(nullable = false, updatable = false)
     private LocalDateTime generatedAt;
 
-    @Column(columnDefinition = "JSON")
+    @Column(columnDefinition = "json") // safer
     private String matchedProjects;
 
     // Relationships
-    @OneToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY) // ✅ FIXED
     @JoinColumn(name = "research_project_id", nullable = false)
     private ResearchProject researchProject;
 }
