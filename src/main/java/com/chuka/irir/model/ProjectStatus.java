@@ -17,6 +17,7 @@ public enum ProjectStatus {
     DRAFT,
     SUBMITTED,
     UNDER_REVIEW,
+    PENDING,
     APPROVED,
     REJECTED,
     FLAGGED,
