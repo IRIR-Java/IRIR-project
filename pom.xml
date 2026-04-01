@@ -145,6 +145,13 @@
             <version>${lucene.version}</version>
         </dependency>
 
+        <!-- Lucene Highlighter — highlighting search results -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-highlighter</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
+
         <!-- ==================== NLP (Stanford CoreNLP) ==================== -->
 
         <!-- Stanford CoreNLP — tokenization, POS tagging, NER, parsing -->

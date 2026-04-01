@@ -46,7 +46,7 @@ public class User {
     private String phoneNumber;
 
     @Column(length = 255)
-    private String profilePhotoPath;
+    private String profilePhotoUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -65,6 +65,9 @@ public class User {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     // Relationships
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -78,6 +81,18 @@ public class User {
     @Column(name = "account_non_locked", nullable = false)
     @Builder.Default
     private boolean accountNonLocked = true;
+
+    // ==================== Lifecycle Callbacks ====================
+
+    @PrePersist
+    protected void onCreate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     // ==================== Convenience Methods ====================
 

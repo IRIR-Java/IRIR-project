@@ -104,6 +104,14 @@ public class Project {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "view_count")
+    @Builder.Default
+    private int viewCount = 0;
+
+    @Column(name = "download_count")
+    @Builder.Default
+    private int downloadCount = 0;
+
     // ==================== Lifecycle Callbacks ====================
 
     @PrePersist
