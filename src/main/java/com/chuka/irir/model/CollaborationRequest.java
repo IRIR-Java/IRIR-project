@@ -27,6 +27,9 @@ public class CollaborationRequest {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "responded_at")
+    private LocalDateTime respondedAt;
+
     // Relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)

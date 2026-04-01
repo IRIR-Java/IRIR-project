@@ -8,12 +8,12 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Map;
 
 @Service
@@ -28,13 +28,13 @@ public class ReportExportService {
         document.addPage(page);
 
         PDPageContentStream contentStream = new PDPageContentStream(document, page);
-        contentStream.setFont(PDType1Font.HELVETICA_BOLD, 18);
+        contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 18);
         contentStream.beginText();
         contentStream.newLineAtOffset(50, 750);
         contentStream.showText("Research Analytics Report");
         contentStream.endText();
 
-        contentStream.setFont(PDType1Font.HELVETICA, 12);
+        contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
         contentStream.beginText();
         contentStream.newLineAtOffset(50, 700);
         contentStream.showText("Department Data:");
@@ -81,7 +81,7 @@ public class ReportExportService {
             row.createCell(5).setCellValue(project.getStatus().toString());
             row.createCell(6).setCellValue(project.getSimilarityScore() != null ? project.getSimilarityScore() : 0);
             row.createCell(7).setCellValue(project.getViewCount() != null ? project.getViewCount() : 0);
-            row.createCell(8).setCellValue(project.isIncubationFlagged());
+            row.createCell(8).setCellValue(Boolean.TRUE.equals(project.getIsIncubationFlagged()));
         }
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
