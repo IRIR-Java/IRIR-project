@@ -58,6 +58,11 @@
                         <i class="bi bi-folder2-open me-1"></i> My Projects
                     </a>
                 </li>
+                <li class="nav-item" sec:authorize="hasRole('STUDENT')">
+                    <a class="nav-link" th:href="@{/student/collaborators}">
+                        <i class="bi bi-people me-1"></i> Collaborators
+                    </a>
+                </li>
 
                 <!-- Supervisor Links -->
                 <li class="nav-item" sec:authorize="hasRole('SUPERVISOR')">
