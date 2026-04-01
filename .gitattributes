@@ -1,0 +1,7 @@
+# Force Unix line endings for shell scripts (required for Linux deployment)
+mvnw text eol=lf
+mvnw.cmd text eol=crlf
+*.sh text eol=lf
+
+# Auto-detect text files and normalize line endings
+* text=auto
