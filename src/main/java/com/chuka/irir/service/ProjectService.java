@@ -29,19 +29,27 @@ public class ProjectService {
 
     private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
 
+    private static final int KEYWORD_AUGMENT_THRESHOLD = 3;
+
     private final ProjectRepository projectRepository;
     private final FileStorageService fileStorageService;
     private final LuceneIndexService luceneIndexService;
     private final SimilarityDetectionService similarityDetectionService;
+    private final NotificationService notificationService;
+    private final KeywordExtractionService keywordExtractionService;
 
     public ProjectService(ProjectRepository projectRepository,
                           FileStorageService fileStorageService,
                           LuceneIndexService luceneIndexService,
-                          SimilarityDetectionService similarityDetectionService) {
+                          SimilarityDetectionService similarityDetectionService,
+                          NotificationService notificationService,
+                          KeywordExtractionService keywordExtractionService) {
         this.projectRepository = projectRepository;
         this.fileStorageService = fileStorageService;
         this.luceneIndexService = luceneIndexService;
         this.similarityDetectionService = similarityDetectionService;
+        this.notificationService = notificationService;
+        this.keywordExtractionService = keywordExtractionService;
     }
 
     /**
@@ -84,7 +92,23 @@ public class ProjectService {
         }
 
         if (extractedBuilder.length() > 0) {
-            project.setExtractedText(extractedBuilder.toString());
+            String extractedText = extractedBuilder.toString();
+            project.setExtractedText(extractedText);
+
+            // Auto-augment keywords from extracted text when student provides few/none
+            if (project.getKeywords().size() < KEYWORD_AUGMENT_THRESHOLD) {
+                try {
+                    Set<String> nlpKeywords = keywordExtractionService.extractKeywords(extractedText);
+                    Set<String> merged = new LinkedHashSet<>(project.getKeywords());
+                    merged.addAll(nlpKeywords);
+                    project.setKeywords(merged);
+                    logger.debug("NLP extracted {} keywords for project '{}'",
+                            nlpKeywords.size(), project.getTitle());
+                } catch (Exception e) {
+                    logger.warn("Keyword extraction failed for project '{}': {}",
+                            project.getTitle(), e.getMessage());
+                }
+            }
         }
 
         Project saved = projectRepository.save(project);
@@ -210,11 +234,14 @@ public class ProjectService {
                     logger.warn("Project [id={}, title='{}'] FLAGGED — similarity score {} ({})",
                             project.getId(), project.getTitle(),
                             result.getMaxSimilarityScore(), result.getVerdictLabel());
-                    // TODO: Send email notification to supervisor (UC-03)
+                    notificationService.sendFlaggedProjectNotification(
+                            project.getSupervisor(), student, project, result.getMaxSimilarityScore());
                 } else if (result.getMaxSimilarityScore() >= 0.40) {
                     // Score 0.40–0.69 → "Similar Work Detected" → warn, allow submission
                     logger.info("Project [id={}] has moderate similarity ({}): {}",
                             project.getId(), result.getMaxSimilarityScore(), result.getVerdictLabel());
+                    notificationService.sendSimilarityWarningNotification(
+                            student, project, result.getMaxSimilarityScore());
                 } else {
                     // Score < 0.40 → "Original Work" → auto-approve for indexing
                     logger.info("Project [id={}] is original work (score={})",
@@ -236,6 +263,12 @@ public class ProjectService {
         Project saved = projectRepository.save(project);
         logger.info("Project submitted by {}: {} (status={})",
                 student.getEmail(), saved.getTitle(), saved.getStatus());
+
+        // Notify assigned supervisor (if any) that a new project needs review
+        if (saved.getSupervisor() != null && saved.getStatus() != ProjectStatus.FLAGGED) {
+            notificationService.sendProjectSubmittedNotification(saved.getSupervisor(), saved);
+        }
+
         return saved;
     }
 

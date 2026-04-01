@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+<div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div style="background-color: #dc3545; padding: 24px 32px;">
+        <h1 style="color: #ffffff; margin: 0; font-size: 22px;">FLAGGED Project Requires Review</h1>
+    </div>
+    <div style="padding: 32px;">
+        <p style="color: #333;">Dear <strong th:text="${supervisorName}">Supervisor</strong>,</p>
+        <p style="color: #555;">
+            A project submitted by one of your students has been <strong>automatically flagged</strong> by the IRIR similarity detection system as a potential duplicate.
+        </p>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <tr>
+                <td style="padding: 8px 0; color: #888; width: 140px;">Student:</td>
+                <td style="padding: 8px 0; font-weight: bold; color: #333;" th:text="${studentName}">Student Name</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; color: #888;">Project Title:</td>
+                <td style="padding: 8px 0; font-weight: bold; color: #333;" th:text="${projectTitle}">Project Title</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; color: #888;">Similarity Score:</td>
+                <td style="padding: 8px 0; font-weight: bold; color: #dc3545;" th:text="${scorePercent}">0%</td>
+            </tr>
+        </table>
+        <p style="color: #555;">The project has been placed on hold and requires your manual review before it can proceed.</p>
+        <p style="margin-top: 24px;">
+            <a href="/dashboard"
+               style="background-color: #dc3545; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+                Review Flagged Project
+            </a>
+        </p>
+        <p style="color: #888; font-size: 13px; margin-top: 32px;">
+            This project will remain on hold until you approve or reject it through the IRIR supervisor dashboard.
+        </p>
+    </div>
+    <div style="background-color: #f8f9fa; padding: 16px 32px; text-align: center; color: #aaa; font-size: 12px;">
+        &copy; Chuka University — Intelligent Research &amp; Innovation Repository
+    </div>
+</div>
+</body>
+</html>

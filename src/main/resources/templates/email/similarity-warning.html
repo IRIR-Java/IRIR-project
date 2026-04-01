@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+<div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div style="background-color: #ffc107; padding: 24px 32px;">
+        <h1 style="color: #212529; margin: 0; font-size: 22px;">Similarity Warning Detected</h1>
+    </div>
+    <div style="padding: 32px;">
+        <p style="color: #333;">Dear <strong th:text="${studentName}">Student</strong>,</p>
+        <p style="color: #555;">
+            Your project <strong th:text="${projectTitle}">"Project Title"</strong> has been submitted successfully.
+            However, our similarity detection system has flagged a moderate similarity score.
+        </p>
+        <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0; font-size: 16px; color: #856404;">
+                Similarity Score: <strong th:text="${scorePercent}">0%</strong>
+            </p>
+            <p style="margin: 8px 0 0; color: #856404; font-size: 14px;">
+                "Similar Work Detected" — Your submission has been allowed, but please review your work for originality.
+            </p>
+        </div>
+        <p style="color: #555;">We recommend reviewing the matched projects in your IRIR dashboard and ensuring all sources are properly cited.</p>
+        <p style="margin-top: 24px;">
+            <a href="/student/projects"
+               style="background-color: #ffc107; color: #212529; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+                View My Projects
+            </a>
+        </p>
+        <p style="color: #888; font-size: 13px; margin-top: 32px;">
+            This is an automated message from the IRIR similarity detection system.
+        </p>
+    </div>
+    <div style="background-color: #f8f9fa; padding: 16px 32px; text-align: center; color: #aaa; font-size: 12px;">
+        &copy; Chuka University — Intelligent Research &amp; Innovation Repository
+    </div>
+</div>
+</body>
+</html>

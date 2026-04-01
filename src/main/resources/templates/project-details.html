@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{fragments/layout :: head('Project Details')}"></head>
+
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="dashboard-main">
+    <div class="container">
+
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="dashboard-title">
+                        <i class="bi bi-journal-text me-2"></i>
+                        <span th:text="${project.title}">Project Title</span>
+                    </h1>
+                    <p class="dashboard-subtitle">Research project details</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <a href="/gallery" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Gallery
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <div class="content-card mb-4">
+                    <div class="content-card-header">
+                        <h2><i class="bi bi-info-circle me-2"></i>Overview</h2>
+                    </div>
+                    <div class="content-card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Author</div>
+                            <div class="col-md-8 fw-semibold"
+                                 th:text="${project.submittedBy != null ? project.submittedBy.fullName : '—'}">Author</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Department</div>
+                            <div class="col-md-8"
+                                 th:text="${project.submittedBy != null && project.submittedBy.department != null ? project.submittedBy.department : '—'}">Department</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Academic Year</div>
+                            <div class="col-md-8" th:text="${project.academicYear != null ? project.academicYear : '—'}">Year</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Status</div>
+                            <div class="col-md-8">
+                                <span class="badge"
+                                      th:classappend="${project.status.name() == 'APPROVED'} ? 'bg-success' :
+                                                     (${project.status.name() == 'FLAGGED'} ? 'bg-warning text-dark' : 'bg-secondary')"
+                                      th:text="${project.status}">Status</span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Views</div>
+                            <div class="col-md-8">
+                                <i class="bi bi-eye me-1"></i>
+                                <span th:text="${project.viewCount}">0</span>
+                            </div>
+                        </div>
+                        <div class="row mb-3" th:if="${project.keywords != null && !project.keywords.isEmpty()}">
+                            <div class="col-md-4 text-muted">Keywords</div>
+                            <div class="col-md-8">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <span class="badge bg-secondary" th:each="kw : ${project.keywords}" th:text="${kw}">keyword</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${project.abstractText != null && !project.abstractText.isBlank()}">
+                            <div class="text-muted mb-2">Abstract</div>
+                            <p class="mb-0" th:text="${project.abstractText}">Abstract</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar: Similar Projects -->
+            <div class="col-lg-4">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h2><i class="bi bi-diagram-3 me-2"></i>Similar Projects</h2>
+                    </div>
+                    <div class="content-card-body">
+                        <div th:if="${similarProjects == null || similarProjects.isEmpty()}" class="text-muted">
+                            No similar projects found.
+                        </div>
+                        <div th:if="${similarProjects != null && !similarProjects.isEmpty()}" class="d-grid gap-3">
+                            <div th:each="p : ${similarProjects}" class="p-3 rounded border">
+                                <a th:href="@{/gallery/{id}(id=${p.projectId})}"
+                                   class="fw-semibold text-decoration-none"
+                                   th:text="${p.title}">Project Title</a>
+                                <div class="text-muted small mt-1">
+                                    <i class="bi bi-person me-1"></i>
+                                    <span th:text="${p.author}">Author</span>
+                                    &bull;
+                                    <span th:text="${p.year}">Year</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

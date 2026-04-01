@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{fragments/layout :: head('My Profile')}"></head>
+
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="dashboard-main">
+    <div class="container">
+
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="dashboard-title">
+                        <i class="bi bi-person-circle me-2"></i> My Profile
+                    </h1>
+                    <p class="dashboard-subtitle">Manage your account details and research interests</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <a th:href="@{/student/dashboard}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <span th:text="${successMessage}">Success</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- Profile Info (read-only) -->
+            <div class="col-lg-4">
+                <div class="content-card text-center">
+                    <div class="content-card-body py-4">
+                        <div class="mb-3">
+                            <img th:if="${user.profilePhotoUrl != null && !user.profilePhotoUrl.isBlank()}"
+                                 th:src="${user.profilePhotoUrl}"
+                                 class="rounded-circle border"
+                                 style="width: 96px; height: 96px; object-fit: cover;"
+                                 alt="Profile photo">
+                            <div th:if="${user.profilePhotoUrl == null || user.profilePhotoUrl.isBlank()}"
+                                 class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center"
+                                 style="width: 96px; height: 96px; font-size: 2.5rem;">
+                                <i class="bi bi-person-fill text-white"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-1" th:text="${user.fullName}">Full Name</h4>
+                        <p class="text-muted mb-1" th:text="${user.email}">email@example.com</p>
+                        <span class="badge bg-primary" th:text="${user.role}">STUDENT</span>
+                        <div th:if="${user.department != null}" class="mt-2 text-muted small"
+                             th:text="${user.department}">Department</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <div class="col-lg-8">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h2><i class="bi bi-pencil me-2"></i>Edit Profile</h2>
+                    </div>
+                    <div class="content-card-body">
+                        <form th:action="@{/student/profile}" method="post">
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Phone Number</label>
+                                <input type="text" class="form-control"
+                                       name="phoneNumber"
+                                       th:value="${user.phoneNumber}"
+                                       placeholder="+254 7XX XXX XXX">
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Research Interests</label>
+                                <textarea class="form-control" name="researchInterests" rows="4"
+                                          placeholder="e.g. machine learning, distributed systems, IoT..."
+                                          th:text="${user.researchInterests}"></textarea>
+                                <div class="form-text">Comma-separated topics help the system recommend collaborators.</div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Profile Photo URL</label>
+                                <input type="url" class="form-control"
+                                       name="profilePhotoUrl"
+                                       th:value="${user.profilePhotoUrl}"
+                                       placeholder="https://...">
+                                <div class="form-text">Link to an externally-hosted profile image.</div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-1"></i> Save Changes
+                                </button>
+                                <a th:href="@{/student/dashboard}" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

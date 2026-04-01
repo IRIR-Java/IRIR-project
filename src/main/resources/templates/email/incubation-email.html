@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+<div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div style="background-color: #6f42c1; padding: 24px 32px;">
+        <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Project Selected for Incubation!</h1>
+    </div>
+    <div style="padding: 32px;">
+        <p style="color: #333;">Dear <strong th:text="${studentName}">Student</strong>,</p>
+        <p style="color: #555;">
+            Congratulations! Your research project has been selected by the Directorate as a high-potential candidate for the <strong>Chuka University Innovation Incubation Programme</strong>.
+        </p>
+        <div style="background-color: #e9d8fd; border-left: 4px solid #6f42c1; padding: 16px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0; font-weight: bold; color: #432874;" th:text="${projectTitle}">Project Title</p>
+        </div>
+        <p style="color: #555;">
+            A member of the Directorate will contact you shortly with further details about the incubation process and next steps.
+        </p>
+        <p style="margin-top: 24px;">
+            <a href="/student/projects"
+               style="background-color: #6f42c1; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+                View My Projects
+            </a>
+        </p>
+    </div>
+    <div style="background-color: #f8f9fa; padding: 16px 32px; text-align: center; color: #aaa; font-size: 12px;">
+        &copy; Chuka University — Intelligent Research &amp; Innovation Repository
+    </div>
+</div>
+</body>
+</html>

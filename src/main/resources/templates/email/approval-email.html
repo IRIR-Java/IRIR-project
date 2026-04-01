@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+<div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div style="background-color: #198754; padding: 24px 32px;">
+        <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Project Approved!</h1>
+    </div>
+    <div style="padding: 32px;">
+        <p style="color: #333;">Dear <strong th:text="${studentName}">Student</strong>,</p>
+        <p style="color: #555;">
+            We are pleased to inform you that your research project has been <strong>approved</strong>.
+        </p>
+        <div style="background-color: #d1e7dd; border-left: 4px solid #198754; padding: 16px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0; font-weight: bold; color: #0a3622;" th:text="${projectTitle}">Project Title</p>
+        </div>
+        <p style="color: #555;">Your project is now part of the IRIR research repository and may be discovered by other students and supervisors.</p>
+        <p style="margin-top: 24px;">
+            <a href="/student/projects"
+               style="background-color: #198754; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+                View My Projects
+            </a>
+        </p>
+    </div>
+    <div style="background-color: #f8f9fa; padding: 16px 32px; text-align: center; color: #aaa; font-size: 12px;">
+        &copy; Chuka University — Intelligent Research &amp; Innovation Repository
+    </div>
+</div>
+</body>
+</html>

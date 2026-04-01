@@ -1,120 +1,186 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <title>Directorate Analytics Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+
+<head th:replace="~{fragments/layout :: head('Analytics Dashboard')}"></head>
+
 <body>
-    <div class="container mt-4">
-        <h1>Research Analytics Dashboard</h1>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
 
-        <div class="row">
-            <div class="col-md-6">
-                <h3>Projects by Department</h3>
-                <canvas id="departmentChart"></canvas>
-            </div>
-            <div class="col-md-6">
-                <h3>Monthly Submission Trends</h3>
-                <canvas id="trendsChart"></canvas>
+<main class="dashboard-main">
+    <div class="container">
+
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="dashboard-title">
+                        <i class="bi bi-bar-chart-line me-2"></i> Research Analytics
+                    </h1>
+                    <p class="dashboard-subtitle">System-wide research trends and metrics</p>
+                </div>
+                <div class="col-md-4 text-md-end d-flex gap-2 justify-content-md-end">
+                    <a href="/directorate/export/pdf" class="btn btn-outline-primary">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </a>
+                    <a href="/directorate/export/excel" class="btn btn-outline-success">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    </a>
+                </div>
             </div>
         </div>
 
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <h3>Top Research Domains</h3>
-                <canvas id="domainChart"></canvas>
+        <!-- Charts Row -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="content-card h-100">
+                    <div class="content-card-header">
+                        <h2><i class="bi bi-building me-2"></i>Projects by Department</h2>
+                    </div>
+                    <div class="content-card-body">
+                        <canvas id="departmentChart" style="max-height: 280px;"></canvas>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6">
-                <h3>Export Reports</h3>
-                <a href="/directorate/export/pdf" class="btn btn-primary">Download PDF Report</a>
-                <a href="/directorate/export/excel" class="btn btn-success">Download Excel Report</a>
+            <div class="col-lg-6">
+                <div class="content-card h-100">
+                    <div class="content-card-header">
+                        <h2><i class="bi bi-graph-up me-2"></i>Monthly Submission Trends</h2>
+                    </div>
+                    <div class="content-card-body">
+                        <canvas id="trendsChart" style="max-height: 280px;"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="row mt-4">
-            <div class="col-12">
-                <h3>High Potential Projects</h3>
-                <table class="table table-striped">
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="content-card h-100">
+                    <div class="content-card-header">
+                        <h2><i class="bi bi-tags me-2"></i>Top Research Domains</h2>
+                    </div>
+                    <div class="content-card-body">
+                        <canvas id="domainChart" style="max-height: 280px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="content-card h-100">
+                    <div class="content-card-header">
+                        <h2><i class="bi bi-lightning-charge me-2"></i>High Potential Projects</h2>
+                    </div>
+                    <div class="content-card-body">
+                        <div th:if="${highPotentialProjects == null || highPotentialProjects.isEmpty()}"
+                             class="text-muted text-center py-4">No high-potential projects yet.</div>
+                        <div th:if="${highPotentialProjects != null && !highPotentialProjects.isEmpty()}"
+                             class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Views</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="project : ${highPotentialProjects}">
+                                        <td>
+                                            <div class="fw-semibold" th:text="${project.title}">Title</div>
+                                            <div class="text-muted small"
+                                                 th:text="${project.owner != null ? project.owner.fullName : '—'}">Author</div>
+                                        </td>
+                                        <td th:text="${project.viewCount}">0</td>
+                                        <td>
+                                            <form th:action="@{'/directorate/project/' + ${project.projectId} + '/flag-incubation'}"
+                                                  method="post">
+                                                <button type="submit" class="btn btn-warning btn-sm">
+                                                    <i class="bi bi-rocket me-1"></i>Flag
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Incubation Candidates -->
+        <div class="content-card mb-4" th:if="${incubationCandidates != null && !incubationCandidates.isEmpty()}">
+            <div class="content-card-header">
+                <h2><i class="bi bi-rocket-takeoff me-2"></i>Incubation Candidates</h2>
+            </div>
+            <div class="content-card-body table-responsive">
+                <table class="table table-hover align-middle">
                     <thead>
                         <tr>
                             <th>Title</th>
                             <th>Student</th>
-                            <th>Similarity Score</th>
-                            <th>Views</th>
-                            <th>Action</th>
+                            <th>Department</th>
+                            <th>Upload Date</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="project : ${highPotentialProjects}">
-                            <td th:text="${project.title}"></td>
-                            <td th:text="${project.owner != null ? project.owner.email : 'N/A'}"></td>
-                            <td th:text="${project.similarityScore}"></td>
-                            <td th:text="${project.viewCount}"></td>
-                            <td>
-                                <form th:action="@{'/directorate/project/' + ${project.projectId} + '/flag-incubation'}" method="post" style="display:inline;">
-                                    <button type="submit" class="btn btn-warning btn-sm">Flag for Incubation</button>
-                                </form>
-                            </td>
+                        <tr th:each="project : ${incubationCandidates}">
+                            <td th:text="${project.title}">Title</td>
+                            <td th:text="${project.owner != null ? project.owner.fullName : '—'}">Student</td>
+                            <td th:text="${project.department != null ? project.department : '—'}">Dept</td>
+                            <td th:text="${project.uploadDate != null ? #temporals.format(project.uploadDate, 'dd MMM yyyy') : '—'}">Date</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
+
     </div>
+</main>
 
-    <script th:inline="javascript">
-        // Department Chart
-        const departmentCtx = document.getElementById('departmentChart').getContext('2d');
-        new Chart(departmentCtx, {
-            type: 'bar',
-            data: {
-                labels: /*[[${departmentLabels}]]*/,
-                datasets: [{
-                    label: 'Projects',
-                    data: /*[[${departmentCounts}]]*/,
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            }
-        });
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 
-        // Trends Chart
-        const trendsCtx = document.getElementById('trendsChart').getContext('2d');
-        new Chart(trendsCtx, {
-            type: 'line',
-            data: {
-                labels: /*[[${trendsLabels}]]*/,
-                datasets: [{
-                    label: 'Submissions',
-                    data: /*[[${trendsCounts}]]*/,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    tension: 0.1
-                }]
-            }
-        });
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const departmentLabels = /*[[${departmentLabels}]]*/ [];
+    const departmentCounts = /*[[${departmentCounts}]]*/ [];
+    const trendsLabels     = /*[[${trendsLabels}]]*/ [];
+    const trendsCounts     = /*[[${trendsCounts}]]*/ [];
+    const domainLabels     = /*[[${domainLabels}]]*/ [];
+    const domainCounts     = /*[[${domainCounts}]]*/ [];
 
-        // Domain Chart
-        const domainCtx = document.getElementById('domainChart').getContext('2d');
-        new Chart(domainCtx, {
-            type: 'doughnut',
-            data: {
-                labels: /*[[${domainLabels}]]*/,
-                datasets: [{
-                    data: /*[[${domainCounts}]]*/,
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.5)',
-                        'rgba(54, 162, 235, 0.5)',
-                        'rgba(255, 205, 86, 0.5)',
-                        'rgba(75, 192, 192, 0.5)',
-                        'rgba(153, 102, 255, 0.5)'
-                    ]
-                }]
-            }
-        });
-    </script>
+    new Chart(document.getElementById('departmentChart'), {
+        type: 'bar',
+        data: {
+            labels: departmentLabels,
+            datasets: [{ label: 'Projects', data: departmentCounts,
+                backgroundColor: 'rgba(13,110,253,0.6)', borderColor: 'rgba(13,110,253,1)', borderWidth: 1 }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    new Chart(document.getElementById('trendsChart'), {
+        type: 'line',
+        data: {
+            labels: trendsLabels,
+            datasets: [{ label: 'Submissions', data: trendsCounts,
+                borderColor: 'rgba(25,135,84,1)', backgroundColor: 'rgba(25,135,84,0.15)', tension: 0.3, fill: true }]
+        },
+        options: { responsive: true }
+    });
+
+    new Chart(document.getElementById('domainChart'), {
+        type: 'doughnut',
+        data: {
+            labels: domainLabels,
+            datasets: [{ data: domainCounts,
+                backgroundColor: ['#0d6efd','#198754','#ffc107','#dc3545','#6f42c1','#0dcaf0','#fd7e14','#20c997'] }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'right' } } }
+    });
+    /*]]>*/
+</script>
 </body>
 </html>
