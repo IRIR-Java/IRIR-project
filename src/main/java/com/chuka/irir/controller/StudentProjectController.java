@@ -4,10 +4,13 @@ import com.chuka.irir.dto.ProjectCreateDto;
 import com.chuka.irir.exception.ResourceNotFoundException;
 import com.chuka.irir.model.Project;
 import com.chuka.irir.model.ProjectFile;
+import com.chuka.irir.model.SimilarityReport;
 import com.chuka.irir.model.User;
+import com.chuka.irir.repository.SimilarityReportRepository;
 import com.chuka.irir.repository.UserRepository;
 import com.chuka.irir.service.FileStorageService;
 import com.chuka.irir.service.ProjectService;
+import com.chuka.irir.service.SimilarityDetectionService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,13 +45,19 @@ public class StudentProjectController {
     private final ProjectService projectService;
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
+    private final SimilarityReportRepository similarityReportRepository;
+    private final SimilarityDetectionService similarityDetectionService;
 
     public StudentProjectController(ProjectService projectService,
                                     UserRepository userRepository,
-                                    FileStorageService fileStorageService) {
+                                    FileStorageService fileStorageService,
+                                    SimilarityReportRepository similarityReportRepository,
+                                    SimilarityDetectionService similarityDetectionService) {
         this.projectService = projectService;
         this.userRepository = userRepository;
         this.fileStorageService = fileStorageService;
+        this.similarityReportRepository = similarityReportRepository;
+        this.similarityDetectionService = similarityDetectionService;
     }
 
     @GetMapping
@@ -152,8 +161,35 @@ public class StudentProjectController {
                                 Authentication authentication,
                                 RedirectAttributes redirectAttributes) {
         User user = getUser(authentication);
-        projectService.submitProject(projectId, user);
-        redirectAttributes.addFlashAttribute("successMessage", "Project submitted for review.");
+        Project project = projectService.submitProject(projectId, user);
+
+        // Build a submission message that includes the similarity verdict
+        List<SimilarityReport> reports =
+                similarityReportRepository.findBySourceProjectIdWithDetails(project.getId());
+        if (!reports.isEmpty()) {
+            double maxScore = reports.get(0).getSimilarityScore();
+            String verdict = similarityDetectionService.classifyScore(maxScore);
+            String scorePercent = String.format("%.1f%%", maxScore * 100);
+
+            if (similarityDetectionService.isSimilarityAboveThreshold(maxScore)) {
+                // "Potential Duplicate" → held for supervisor review
+                redirectAttributes.addFlashAttribute("warningMessage",
+                        "Project submitted but FLAGGED — Similarity score: " + scorePercent +
+                        " (" + verdict + "). Held for supervisor review.");
+            } else if (!"Original Work".equals(verdict)) {
+                // "Similar Work Detected" → warn student, allow submission
+                redirectAttributes.addFlashAttribute("warningMessage",
+                        "Project submitted — Similarity score: " + scorePercent +
+                        " (" + verdict + "). Please review your work for originality.");
+            } else {
+                // "Original Work" → no issues
+                redirectAttributes.addFlashAttribute("successMessage",
+                        "Project submitted successfully — " + verdict + " (" + scorePercent + " similarity).");
+            }
+        } else {
+            redirectAttributes.addFlashAttribute("successMessage", "Project submitted for review.");
+        }
+
         return "redirect:/student/projects/" + projectId;
     }
 
@@ -165,9 +201,20 @@ public class StudentProjectController {
         Project project = projectService.getProjectForStudent(projectId, user);
         List<Project> recommendations = projectService.recommendCollaborators(project, 5);
 
+        // Load similarity reports for this project (eagerly fetched to avoid lazy init issues)
+        List<SimilarityReport> similarityReports =
+                similarityReportRepository.findBySourceProjectIdWithDetails(project.getId());
+        Double maxSimilarityScore = similarityReportRepository.findMaxSimilarityScoreByProjectId(project.getId());
+        String verdictLabel = maxSimilarityScore != null
+                ? similarityDetectionService.classifyScore(maxSimilarityScore)
+                : "Original Work";
+
         model.addAttribute("user", user);
         model.addAttribute("project", project);
         model.addAttribute("recommendations", recommendations);
+        model.addAttribute("similarityReports", similarityReports);
+        model.addAttribute("maxSimilarityScore", maxSimilarityScore);
+        model.addAttribute("verdictLabel", verdictLabel);
         model.addAttribute("pageTitle", "Project Details");
         return "student/projects/detail";
     }

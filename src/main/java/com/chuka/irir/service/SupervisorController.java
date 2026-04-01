@@ -1,9 +1,7 @@
-package com.irir.controller;
+package com.chuka.irir.service;
 
-import com.irir.dto.FeedbackDTO;
-import com.irir.model.ResearchProject;
-import com.irir.service.FeedbackService;
-import com.irir.service.ResearchProjectService;
+import com.chuka.irir.model.ResearchProject;
+import com.chuka.irir.repository.ResearchProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,30 +17,31 @@ import java.util.stream.Collectors;
 public class SupervisorController {
 
     @Autowired
-    private ResearchProjectService projectService;
-    
+    private ResearchProjectRepository projectRepository;
+
     @Autowired
     private FeedbackService feedbackService;
 
-    // GET /supervisor/dashboard → Lists all projects assigned to this supervisor, grouped by status (PENDING, APPROVED, REJECTED)
+    // GET /supervisor/dashboard → Lists all projects grouped by status
     @GetMapping("/dashboard")
-    public String dashboard(Model model, @SessionAttribute("userId") Long supervisorId) {
-        List<ResearchProject> assignedProjects = projectService.getProjectsBySupervisor(supervisorId);
-        
-        Map<String, List<ResearchProject>> groupedProjects = assignedProjects.stream()
+    public String dashboard(Model model) {
+        List<ResearchProject> allProjects = projectRepository.findAll();
+
+        Map<String, List<ResearchProject>> groupedProjects = allProjects.stream()
             .collect(Collectors.groupingBy(p -> p.getStatus().name()));
-            
+
         model.addAttribute("pendingProjects", groupedProjects.getOrDefault("PENDING", List.of()));
         model.addAttribute("approvedProjects", groupedProjects.getOrDefault("APPROVED", List.of()));
         model.addAttribute("rejectedProjects", groupedProjects.getOrDefault("REJECTED", List.of()));
-        
+
         return "supervisor-dashboard";
     }
 
-    // GET /supervisor/project/{id} → Shows full project detail: metadata, similarity report, extracted text preview, download link
+    // GET /supervisor/project/{id} → Shows full project detail
     @GetMapping("/project/{id}")
     public String viewProjectDetail(@PathVariable Long id, Model model) {
-        ResearchProject project = projectService.getProjectById(id);
+        ResearchProject project = projectRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found"));
         model.addAttribute("project", project);
         model.addAttribute("feedbackDTO", new FeedbackDTO());
         return "project-detail";
@@ -50,22 +49,29 @@ public class SupervisorController {
 
     // POST /supervisor/project/{id}/review → Receives FeedbackDTO, updates project status
     @PostMapping("/project/{id}/review")
-    public String reviewProject(@PathVariable Long id, @ModelAttribute FeedbackDTO dto, @SessionAttribute("userId") Long supervisorId, RedirectAttributes redirectAttributes) {
-        feedbackService.submitFeedback(id, dto, supervisorId);
+    public String reviewProject(@PathVariable Long id,
+                                @ModelAttribute FeedbackDTO dto,
+                                @SessionAttribute(value = "userId", required = false) Long supervisorId,
+                                RedirectAttributes redirectAttributes) {
+        if (supervisorId != null) {
+            feedbackService.submitFeedback(id, dto, supervisorId);
+        }
         redirectAttributes.addFlashAttribute("message", "Feedback submitted successfully.");
         return "redirect:/supervisor/dashboard";
     }
 
-    // GET /supervisor/projects/search → Filter projects by department, keyword, year
+    // GET /supervisor/projects/search → Filter projects by keyword
     @GetMapping("/projects/search")
     public String searchProjects(
-            @RequestParam(required = false) String department,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Integer year,
-            @SessionAttribute("userId") Long supervisorId,
             Model model) {
-            
-        List<ResearchProject> filteredProjects = projectService.searchAssignedProjects(supervisorId, department, keyword, year);
+
+        List<ResearchProject> filteredProjects;
+        if (keyword != null && !keyword.isBlank()) {
+            filteredProjects = projectRepository.searchByTitleOrKeyword(keyword);
+        } else {
+            filteredProjects = projectRepository.findAll();
+        }
         model.addAttribute("projects", filteredProjects);
         return "supervisor-search-results";
     }

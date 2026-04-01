@@ -8,11 +8,13 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -20,13 +22,16 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    private Long id;
 
-    @Column(nullable = false, length = 100)
-    private String fullName;
+    @Column(nullable = false, length = 50)
+    private String firstName;
+
+    @Column(nullable = false, length = 50)
+    private String lastName;
 
     @Column(unique = true, length = 50)
-    private String regNumber;
+    private String studentId;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Please provide a valid email address")
@@ -65,7 +70,7 @@ public class User {
     @Builder.Default
     private List<ResearchProject> researchProjects = new ArrayList<>();
 
-    // Spring Security fields kept for compatibility with existing services where possible
+    // Spring Security fields
     @Column(nullable = false)
     @Builder.Default
     private boolean enabled = true;
@@ -73,4 +78,32 @@ public class User {
     @Column(name = "account_non_locked", nullable = false)
     @Builder.Default
     private boolean accountNonLocked = true;
+
+    // ==================== Convenience Methods ====================
+
+    /** Returns the user's full name by combining first and last name. */
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
+    /**
+     * Returns a singleton set of the user's role for Spring Security compatibility.
+     * The codebase uses both single-role (role) and multi-role (roles) patterns.
+     */
+    public Set<Role> getRoles() {
+        Set<Role> roles = new HashSet<>();
+        if (role != null) {
+            roles.add(role);
+        }
+        return roles;
+    }
+
+    /**
+     * Sets the user's role from a set. Takes the first role from the set.
+     */
+    public void setRoles(Set<Role> roles) {
+        if (roles != null && !roles.isEmpty()) {
+            this.role = roles.iterator().next();
+        }
+    }
 }

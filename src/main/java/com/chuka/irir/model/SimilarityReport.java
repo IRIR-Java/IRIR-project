@@ -16,7 +16,7 @@ public class SimilarityReport {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reportId;
+    private Long id;
 
     @Column(nullable = false)
     private Double similarityScore;
@@ -28,8 +28,19 @@ public class SimilarityReport {
     @Column(columnDefinition = "JSON")
     private String matchedProjects;
 
+    @Column(nullable = false)
+    private boolean flagged;
+
     // Relationships
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "research_project_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "source_project_id", nullable = false)
+    private Project sourceProject;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_project_id", nullable = false)
+    private Project targetProject;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "research_project_id")
     private ResearchProject researchProject;
 }

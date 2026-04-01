@@ -17,18 +17,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
-    boolean existsByRegNumber(String regNumber);
+    boolean existsByStudentId(String studentId);
 
-    Optional<User> findByRegNumber(String regNumber);
+    Optional<User> findByStudentId(String studentId);
 
     List<User> findByRole(Role role);
 
-    @Query("SELECT u FROM User u WHERE LOWER(u.fullName) LIKE LOWER(CONCAT('%', :term, '%')) " +
+    @Query("SELECT u FROM User u WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :term, '%')) " +
+           "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :term, '%')) " +
            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :term, '%'))")
     List<User> searchByNameOrEmail(@Param("term") String term);
 
     long countByRole(Role role);
-    
-    // Additional custom query
+
     List<User> findByDepartment(String department);
 }

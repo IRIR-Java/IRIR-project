@@ -11,17 +11,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.stream.Collectors;
+import java.util.Collections;
 
 /**
  * Custom implementation of Spring Security's {@link UserDetailsService}.
  *
  * Loads user details from the database by email address for authentication.
- * Maps IRIR {@link com.chuka.irir.model.Role} enums to Spring Security
+ * Maps IRIR {@link com.chuka.irir.model.Role} enum to Spring Security
  * {@link GrantedAuthority} objects with the "ROLE_" prefix.
- *
- * <p>This service is used by Spring Security's authentication manager
- * during the login process.</p>
  */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -52,10 +49,10 @@ public class CustomUserDetailsService implements UserDetailsService {
                     return new UsernameNotFoundException("User not found with email: " + email);
                 });
 
-        // Map IRIR roles to Spring Security granted authorities
-        Collection<? extends GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
-                .collect(Collectors.toSet());
+        // Map IRIR role to Spring Security granted authority
+        Collection<GrantedAuthority> authorities = Collections.singletonList(
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+        );
 
         logger.debug("User '{}' authenticated successfully with roles: {}", email, authorities);
 

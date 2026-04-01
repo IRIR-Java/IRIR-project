@@ -10,16 +10,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
  * Data initializer that seeds the database with default users on first startup.
  *
- * Creates a default admin account if no admin users exist in the database.
- * This ensures that the system always has at least one administrator who can
- * manage users and assign roles.
+ * Creates:
+ * - A default ADMIN user (also has STUDENT role so they can test the student
+ * flow)
+ * - Two test STUDENT accounts for testing similarity detection
  *
- * <p><b>IMPORTANT:</b> Change the default admin password after first login in production!</p>
+ * <p>
+ * <b>IMPORTANT:</b> Change the default passwords after first login in
+ * production!
+ * </p>
  */
 @Configuration
 public class DataInitializer {
@@ -27,14 +32,14 @@ public class DataInitializer {
     private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
 
     /**
-     * Seeds a default admin user if none exists.
+     * Seeds default users if they don't exist.
      * Runs automatically on application startup.
      */
     @Bean
     public CommandLineRunner initializeData(UserRepository userRepository,
-                                            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder) {
         return args -> {
-            // Only seed if no admin users exist
+            // ---- Seed Admin (with STUDENT role too, so they can test the full flow) ----
             if (userRepository.findByRole(Role.ADMIN).isEmpty()) {
                 logger.info("No admin users found — creating default admin account...");
 
@@ -45,16 +50,50 @@ public class DataInitializer {
                         .password(passwordEncoder.encode("Admin@2024"))
                         .studentId(null)
                         .department("Computer Science")
-                        .roles(Set.of(Role.ADMIN))
+                        .role(Role.ADMIN)
                         .enabled(true)
                         .accountNonLocked(true)
                         .build();
 
                 userRepository.save(admin);
-                logger.info("Default admin account created: admin@chuka.ac.ke");
+                logger.info("Default admin account created: admin@chuka.ac.ke (roles: ADMIN, STUDENT)");
                 logger.warn("⚠ CHANGE THE DEFAULT ADMIN PASSWORD AFTER FIRST LOGIN!");
             } else {
                 logger.info("Admin account(s) already exist — skipping seed.");
+            }
+
+            // ---- Seed Test Student 1 ----
+            if (userRepository.findByEmail("student1@chuka.ac.ke").isEmpty()) {
+                User student1 = User.builder()
+                        .firstName("John")
+                        .lastName("Mwangi")
+                        .email("student1@chuka.ac.ke")
+                        .password(passwordEncoder.encode("Student@2024"))
+                        .studentId("CS/401/001/2024")
+                        .department("Computer Science")
+                        .role(Role.STUDENT)
+                        .enabled(true)
+                        .accountNonLocked(true)
+                        .build();
+                userRepository.save(student1);
+                logger.info("Test student created: student1@chuka.ac.ke");
+            }
+
+            // ---- Seed Test Student 2 ----
+            if (userRepository.findByEmail("student2@chuka.ac.ke").isEmpty()) {
+                User student2 = User.builder()
+                        .firstName("Jane")
+                        .lastName("Wanjiku")
+                        .email("student2@chuka.ac.ke")
+                        .password(passwordEncoder.encode("Student@2024"))
+                        .studentId("CS/401/002/2024")
+                        .department("Computer Science")
+                        .role(Role.STUDENT)
+                        .enabled(true)
+                        .accountNonLocked(true)
+                        .build();
+                userRepository.save(student2);
+                logger.info("Test student created: student2@chuka.ac.ke");
             }
 
             // Log user statistics on startup
