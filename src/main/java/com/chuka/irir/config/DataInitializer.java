@@ -17,10 +17,14 @@ import java.util.Set;
  * Data initializer that seeds the database with default users on first startup.
  *
  * Creates:
- * - A default ADMIN user (also has STUDENT role so they can test the student flow)
+ * - A default ADMIN user (also has STUDENT role so they can test the student
+ * flow)
  * - Two test STUDENT accounts for testing similarity detection
  *
- * <p><b>IMPORTANT:</b> Change the default passwords after first login in production!</p>
+ * <p>
+ * <b>IMPORTANT:</b> Change the default passwords after first login in
+ * production!
+ * </p>
  */
 @Configuration
 public class DataInitializer {
@@ -33,7 +37,7 @@ public class DataInitializer {
      */
     @Bean
     public CommandLineRunner initializeData(UserRepository userRepository,
-                                            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder) {
         return args -> {
             // ---- Seed Admin (with STUDENT role too, so they can test the full flow) ----
             if (userRepository.findByRole(Role.ADMIN).isEmpty()) {
@@ -46,7 +50,7 @@ public class DataInitializer {
                         .password(passwordEncoder.encode("Admin@2024"))
                         .studentId(null)
                         .department("Computer Science")
-                        .roles(new HashSet<>(Set.of(Role.ADMIN, Role.STUDENT)))
+                        .role(Role.ADMIN)
                         .enabled(true)
                         .accountNonLocked(true)
                         .build();
@@ -67,7 +71,7 @@ public class DataInitializer {
                         .password(passwordEncoder.encode("Student@2024"))
                         .studentId("CS/401/001/2024")
                         .department("Computer Science")
-                        .roles(new HashSet<>(Set.of(Role.STUDENT)))
+                        .role(Role.STUDENT)
                         .enabled(true)
                         .accountNonLocked(true)
                         .build();
@@ -84,7 +88,7 @@ public class DataInitializer {
                         .password(passwordEncoder.encode("Student@2024"))
                         .studentId("CS/401/002/2024")
                         .department("Computer Science")
-                        .roles(new HashSet<>(Set.of(Role.STUDENT)))
+                        .role(Role.STUDENT)
                         .enabled(true)
                         .accountNonLocked(true)
                         .build();

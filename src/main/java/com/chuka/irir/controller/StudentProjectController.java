@@ -171,15 +171,18 @@ public class StudentProjectController {
             String verdict = similarityDetectionService.classifyScore(maxScore);
             String scorePercent = String.format("%.1f%%", maxScore * 100);
 
-            if (maxScore >= 0.70) {
+            if (similarityDetectionService.isSimilarityAboveThreshold(maxScore)) {
+                // "Potential Duplicate" → held for supervisor review
                 redirectAttributes.addFlashAttribute("warningMessage",
                         "Project submitted but FLAGGED — Similarity score: " + scorePercent +
                         " (" + verdict + "). Held for supervisor review.");
-            } else if (maxScore >= 0.40) {
+            } else if (!"Original Work".equals(verdict)) {
+                // "Similar Work Detected" → warn student, allow submission
                 redirectAttributes.addFlashAttribute("warningMessage",
                         "Project submitted — Similarity score: " + scorePercent +
                         " (" + verdict + "). Please review your work for originality.");
             } else {
+                // "Original Work" → no issues
                 redirectAttributes.addFlashAttribute("successMessage",
                         "Project submitted successfully — " + verdict + " (" + scorePercent + " similarity).");
             }
@@ -204,7 +207,7 @@ public class StudentProjectController {
         Double maxSimilarityScore = similarityReportRepository.findMaxSimilarityScoreByProjectId(project.getId());
         String verdictLabel = maxSimilarityScore != null
                 ? similarityDetectionService.classifyScore(maxSimilarityScore)
-                : null;
+                : "Original Work";
 
         model.addAttribute("user", user);
         model.addAttribute("project", project);

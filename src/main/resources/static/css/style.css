@@ -436,6 +436,7 @@ a:hover {
     border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
+    color: var(--text-primary) !important;
 }
 
 .content-card-header {
@@ -447,12 +448,18 @@ a:hover {
 .content-card-header h2 {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
     margin-bottom: 0;
 }
 
 .content-card-body {
     padding: 1.5rem;
+    color: var(--text-primary) !important;
+}
+
+/* Force .text-muted to be light enough on dark backgrounds */
+.text-muted {
+    color: var(--text-secondary) !important;
 }
 
 /* ==================== Tables ==================== */

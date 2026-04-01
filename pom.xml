@@ -138,6 +138,13 @@
             <version>${lucene.version}</version>
         </dependency>
 
+        <!-- Lucene Queries — MoreLikeThis for similarity detection (UC-02) -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queries</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
+
         <!-- ==================== NLP (Stanford CoreNLP) ==================== -->
 
         <!-- Stanford CoreNLP — tokenization, POS tagging, NER, parsing -->

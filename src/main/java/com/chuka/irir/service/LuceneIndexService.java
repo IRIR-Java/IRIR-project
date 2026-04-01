@@ -92,7 +92,10 @@ public class LuceneIndexService {
             Path indexPath = Paths.get(indexDir);
             Files.createDirectories(indexPath);
 
-            // Remove stale lock file from previous unclean shutdown
+            // Remove stale lock file from previous unclean shutdown.
+            // NOTE: This is safe for single-instance deployments because we rebuild the index
+            // with OpenMode.CREATE on startup. For multi-instance deployments, remove this
+            // and use a shared index or external lock coordination instead.
             Path lockFile = indexPath.resolve("write.lock");
             if (Files.exists(lockFile)) {
                 Files.delete(lockFile);
@@ -255,7 +258,7 @@ public class LuceneIndexService {
         // Combined field — used as the primary field for MoreLikeThis similarity queries.
         // Concatenating all textual content ensures TF-IDF calculations consider the full context.
         String fullContent = String.join(" ", title, abstractText, keywords, text);
-        doc.add(new TextField(FIELD_FULL_CONTENT, fullContent, Field.Store.NO));
+        doc.add(new TextField(FIELD_FULL_CONTENT, fullContent, Field.Store.YES));
 
         return doc;
     }

@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>XOM</name>
+  <description>The XOM Dual Streaming/Tree API for Processing XML</description>
+  <url>https://xom.nu</url>
+  <licenses>
+    <license>
+      <name>The GNU Lesser General Public License, Version 2.1</name>
+      <url>https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>https://github.com/elharo/xom</url>
+    <connection>scm:git:git://github.com/elharo/xom.git</connection>
+    <developerConnection>scm:git:ssh://github.com:elharo/xom.git</developerConnection>    
+  </scm>
+  
+  <groupId>xom</groupId>
+  <artifactId>xom</artifactId>
+  <version>1.3.8</version>
+  <packaging>jar</packaging>
+
+  <inceptionYear>2002</inceptionYear>
+
+  <mailingLists>
+    <mailingList>
+      <name>XOM Interest Mailing List</name>
+      <archive>http://lists.ibiblio.org/pipermail/xom-interest/</archive>
+    </mailingList>
+  </mailingLists>
+
+  <developers>
+    <developer>
+      <name>Elliotte Rusty Harold</name>
+      <id>elharo</id>
+      <email>elharo@ibiblio.org</email>
+      <organization>Cafe au Lait</organization>
+    </developer>
+  </developers>
+
+  <dependencies>
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.8.0</version>
+      <type>jar</type>
+    </dependency>  
+    <dependency>
+      <groupId>xalan</groupId>
+      <artifactId>xalan</artifactId>
+      <version>2.7.2</version>
+      <type>jar</type>
+    </dependency>
+  </dependencies>
+  
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+  </build>  
+  
+</project>  

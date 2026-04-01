@@ -129,127 +129,131 @@ public class SimilarityDetectionService {
                 return buildEmptyResult();
             }
 
-            if (reader.numDocs() == 0) {
-                reader.close();
-                logger.info("Lucene index is empty, no similarity check needed");
-                return buildEmptyResult();
-            }
-
-            IndexSearcher searcher = new IndexSearcher(reader);
-            Analyzer analyzer = luceneIndexService.getAnalyzer();
-
-            // ---- Step 1: Use MoreLikeThis to find candidate similar documents ----
-            MoreLikeThis mlt = new MoreLikeThis(reader);
-            mlt.setAnalyzer(analyzer);
-            mlt.setFieldNames(new String[]{LuceneIndexService.FIELD_FULL_CONTENT});
-            mlt.setMinTermFreq(1);        // A term must appear at least 1 time in the source
-            mlt.setMinDocFreq(1);         // A term must appear in at least 1 document
-            mlt.setMinWordLen(3);         // Ignore very short terms
-            mlt.setMaxQueryTerms(100);    // Use up to 100 terms for the query
-
-            // Build the MoreLikeThis query from the new document's text
-            Query mltQuery = mlt.like(LuceneIndexService.FIELD_FULL_CONTENT,
-                    new StringReader(newDocumentText));
-
-            // Execute the query — retrieve top N candidates
-            TopDocs topDocs = searcher.search(mltQuery, maxResults + 5); // Fetch extras in case we filter some
-
-            // ---- Step 2: Compute actual Cosine Similarity for each candidate ----
-            // Tokenize the new document into a TF map
-            Map<String, Integer> newDocTermFreqs = tokenizeToTermFrequencyMap(newDocumentText, analyzer);
-
-            List<MatchedProject> matchedProjects = new ArrayList<>();
-            double maxScore = 0.0;
-
-            for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
-                Document luceneDoc = searcher.storedFields().document(scoreDoc.doc);
-                String candidateProjectIdStr = luceneDoc.get(LuceneIndexService.FIELD_PROJECT_ID);
-
-                if (candidateProjectIdStr == null) {
-                    continue;
+            // Use try-with-resources to ensure the reader is always closed
+            try (reader) {
+                if (reader.numDocs() == 0) {
+                    logger.info("Lucene index is empty, no similarity check needed");
+                    return buildEmptyResult();
                 }
 
-                long candidateProjectId;
-                try {
-                    candidateProjectId = Long.parseLong(candidateProjectIdStr);
-                } catch (NumberFormatException e) {
-                    continue;
-                }
+                IndexSearcher searcher = new IndexSearcher(reader);
+                Analyzer analyzer = luceneIndexService.getAnalyzer();
 
-                // Skip the project being checked against itself
-                if (candidateProjectId == newProjectId) {
-                    continue;
-                }
+                // ---- Step 1: Use MoreLikeThis to find candidate similar documents ----
+                MoreLikeThis mlt = new MoreLikeThis(reader);
+                mlt.setAnalyzer(analyzer);
+                mlt.setFieldNames(new String[]{LuceneIndexService.FIELD_FULL_CONTENT});
+                mlt.setMinTermFreq(1);        // A term must appear at least 1 time in the source
+                mlt.setMinDocFreq(1);         // A term must appear in at least 1 document
+                mlt.setMinWordLen(3);         // Ignore very short terms
+                mlt.setMaxQueryTerms(100);    // Use up to 100 terms for the query
 
-                // Reconstruct the candidate's text from stored fields for TF-IDF comparison
-                String candidateTitle = luceneDoc.get(LuceneIndexService.FIELD_TITLE);
-                String candidateAbstract = luceneDoc.get(LuceneIndexService.FIELD_ABSTRACT);
-                String candidateKeywords = luceneDoc.get(LuceneIndexService.FIELD_KEYWORDS);
-                String candidateText = String.join(" ",
-                        candidateTitle != null ? candidateTitle : "",
-                        candidateAbstract != null ? candidateAbstract : "",
-                        candidateKeywords != null ? candidateKeywords : "");
+                // Build the MoreLikeThis query from the new document's text
+                Query mltQuery = mlt.like(LuceneIndexService.FIELD_FULL_CONTENT,
+                        new StringReader(newDocumentText));
 
-                // Tokenize the candidate document into a TF map
-                Map<String, Integer> candidateTermFreqs = tokenizeToTermFrequencyMap(candidateText, analyzer);
+                // Execute the query — retrieve top N candidates
+                TopDocs topDocs = searcher.search(mltQuery, maxResults + 5); // Fetch extras in case we filter some
 
-                // Compute Cosine Similarity between the TF-IDF vectors
-                double cosineSim = computeCosineSimilarity(
-                        newDocTermFreqs, candidateTermFreqs, reader);
+                // ---- Step 2: Compute actual Cosine Similarity for each candidate ----
+                // Tokenize the new document into a TF map
+                Map<String, Integer> newDocTermFreqs = tokenizeToTermFrequencyMap(newDocumentText, analyzer);
 
-                if (cosineSim > 0.0) {
-                    // Look up the project from DB for author info
-                    String title = candidateTitle != null ? candidateTitle : "Unknown";
-                    String author = "Unknown";
-                    Optional<Project> candidateProject = projectRepository.findById(candidateProjectId);
-                    if (candidateProject.isPresent()) {
-                        Project cp = candidateProject.get();
-                        title = cp.getTitle();
-                        if (cp.getSubmittedBy() != null) {
-                            author = cp.getSubmittedBy().getFirstName() + " " +
-                                     cp.getSubmittedBy().getLastName();
+                List<MatchedProject> matchedProjects = new ArrayList<>();
+                double maxScore = 0.0;
+
+                for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+                    Document luceneDoc = searcher.storedFields().document(scoreDoc.doc);
+                    String candidateProjectIdStr = luceneDoc.get(LuceneIndexService.FIELD_PROJECT_ID);
+
+                    if (candidateProjectIdStr == null) {
+                        continue;
+                    }
+
+                    long candidateProjectId;
+                    try {
+                        candidateProjectId = Long.parseLong(candidateProjectIdStr);
+                    } catch (NumberFormatException e) {
+                        continue;
+                    }
+
+                    // Skip the project being checked against itself
+                    if (candidateProjectId == newProjectId) {
+                        continue;
+                    }
+
+                    // Retrieve the full combined text stored in the index for TF-IDF comparison
+                    String candidateText = luceneDoc.get(LuceneIndexService.FIELD_FULL_CONTENT);
+                    if (candidateText == null || candidateText.isBlank()) {
+                        // Fallback: reconstruct from individual stored fields
+                        String candidateTitle = luceneDoc.get(LuceneIndexService.FIELD_TITLE);
+                        String candidateAbstract = luceneDoc.get(LuceneIndexService.FIELD_ABSTRACT);
+                        String candidateKeywords = luceneDoc.get(LuceneIndexService.FIELD_KEYWORDS);
+                        candidateText = String.join(" ",
+                                candidateTitle != null ? candidateTitle : "",
+                                candidateAbstract != null ? candidateAbstract : "",
+                                candidateKeywords != null ? candidateKeywords : "");
+                    }
+
+                    // Tokenize the candidate document into a TF map
+                    Map<String, Integer> candidateTermFreqs = tokenizeToTermFrequencyMap(candidateText, analyzer);
+
+                    // Compute Cosine Similarity between the TF-IDF vectors
+                    double cosineSim = computeCosineSimilarity(
+                            newDocTermFreqs, candidateTermFreqs, reader);
+
+                    if (cosineSim > 0.0) {
+                        // Look up the project from DB for title and author info
+                        String title = "Unknown";
+                        String author = "Unknown";
+                        Optional<Project> candidateProject = projectRepository.findById(candidateProjectId);
+                        if (candidateProject.isPresent()) {
+                            Project cp = candidateProject.get();
+                            title = cp.getTitle();
+                            if (cp.getSubmittedBy() != null) {
+                                author = cp.getSubmittedBy().getFirstName() + " " +
+                                         cp.getSubmittedBy().getLastName();
+                            }
+                        }
+
+                        matchedProjects.add(MatchedProject.builder()
+                                .projectId(candidateProjectId)
+                                .title(title)
+                                .author(author)
+                                .similarityScore(Math.round(cosineSim * 10000.0) / 10000.0) // 4 decimal places
+                                .projectUrl("/student/projects/" + candidateProjectId)
+                                .build());
+
+                        if (cosineSim > maxScore) {
+                            maxScore = cosineSim;
                         }
                     }
-
-                    matchedProjects.add(MatchedProject.builder()
-                            .projectId(candidateProjectId)
-                            .title(title)
-                            .author(author)
-                            .similarityScore(Math.round(cosineSim * 10000.0) / 10000.0) // 4 decimal places
-                            .projectUrl("/student/projects/" + candidateProjectId)
-                            .build());
-
-                    if (cosineSim > maxScore) {
-                        maxScore = cosineSim;
-                    }
                 }
+
+                // Sort matched projects by score descending
+                matchedProjects.sort((a, b) -> Double.compare(b.getSimilarityScore(), a.getSimilarityScore()));
+
+                // Limit to maxResults
+                if (matchedProjects.size() > maxResults) {
+                    matchedProjects = matchedProjects.subList(0, maxResults);
+                }
+
+                // ---- Step 3: Classify the result ----
+                String verdict = classifyScore(maxScore);
+                boolean aboveThreshold = maxScore >= flagThreshold;
+
+                SimilarityResult result = SimilarityResult.builder()
+                        .maxSimilarityScore(Math.round(maxScore * 10000.0) / 10000.0)
+                        .aboveThreshold(aboveThreshold)
+                        .verdictLabel(verdict)
+                        .matchedProjects(matchedProjects)
+                        .build();
+
+                logger.info("Similarity check for project [id={}]: score={}, verdict='{}', matches={}",
+                        newProjectId, result.getMaxSimilarityScore(), verdict, matchedProjects.size());
+
+                return result;
             }
-
-            reader.close();
-
-            // Sort matched projects by score descending
-            matchedProjects.sort((a, b) -> Double.compare(b.getSimilarityScore(), a.getSimilarityScore()));
-
-            // Limit to maxResults
-            if (matchedProjects.size() > maxResults) {
-                matchedProjects = matchedProjects.subList(0, maxResults);
-            }
-
-            // ---- Step 3: Classify the result ----
-            String verdict = classifyScore(maxScore);
-            boolean aboveThreshold = maxScore >= flagThreshold;
-
-            SimilarityResult result = SimilarityResult.builder()
-                    .maxSimilarityScore(Math.round(maxScore * 10000.0) / 10000.0)
-                    .aboveThreshold(aboveThreshold)
-                    .verdictLabel(verdict)
-                    .matchedProjects(matchedProjects)
-                    .build();
-
-            logger.info("Similarity check for project [id={}]: score={}, verdict='{}', matches={}",
-                    newProjectId, result.getMaxSimilarityScore(), verdict, matchedProjects.size());
-
-            return result;
 
         } catch (IOException e) {
             logger.error("Similarity check failed for project [id={}]: {}",
@@ -304,16 +308,23 @@ public class SimilarityDetectionService {
             return;
         }
 
+        // Batch-load all target projects in a single query (avoids N+1)
+        Set<Long> targetIds = result.getMatchedProjects().stream()
+                .map(MatchedProject::getProjectId)
+                .collect(Collectors.toSet());
+        Map<Long, Project> targetProjectMap = projectRepository.findAllById(targetIds).stream()
+                .collect(Collectors.toMap(Project::getId, p -> p));
+
         for (MatchedProject match : result.getMatchedProjects()) {
-            Optional<Project> targetProject = projectRepository.findById(match.getProjectId());
-            if (targetProject.isEmpty()) {
+            Project targetProject = targetProjectMap.get(match.getProjectId());
+            if (targetProject == null) {
                 logger.warn("Matched project [id={}] not found in DB, skipping report", match.getProjectId());
                 continue;
             }
 
             SimilarityReport report = SimilarityReport.builder()
                     .sourceProject(project)
-                    .targetProject(targetProject.get())
+                    .targetProject(targetProject)
                     .similarityScore(match.getSimilarityScore())
                     .flagged(isSimilarityAboveThreshold(match.getSimilarityScore()))
                     .build();
