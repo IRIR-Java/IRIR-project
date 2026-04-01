@@ -98,8 +98,8 @@ public class StudentProjectController {
 
         Project project = projectService.createProject(projectDto, user);
         redirectAttributes.addFlashAttribute("successMessage",
-                "Upload successful. Your project is saved as a draft in IRIR. Submit to your lecturer when ready.");
-        return "redirect:/student/projects/" + project.getId();
+                "Upload successful. Your draft has been saved. Review students with similar projects below.");
+        return "redirect:/student/collaborators";
     }
 
     @GetMapping("/{id}/edit")

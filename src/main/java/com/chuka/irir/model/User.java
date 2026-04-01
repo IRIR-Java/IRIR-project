@@ -71,6 +71,10 @@ public class User {
     @Builder.Default
     private boolean accountNonLocked = true;
 
+    /** Free-text research interests for collaborator matching (UC-04). */
+    @Column(name = "research_interests", columnDefinition = "TEXT")
+    private String researchInterests;
+
     /**
      * Set of roles assigned to this user.
      * Stored in a separate {@code user_roles} table with columns: user_id, role.

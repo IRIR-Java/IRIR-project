@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!--
+  ============================================================================
+  IRIR — Research Collaborator Recommendations Page
+  Shows students with overlapping research interests and allows sending
+  collaboration requests. Part of UC-04.
+  ============================================================================
+-->
+<head th:replace="~{fragments/layout :: head('Research Collaborators')}">
+    <title>Research Collaborators | IRIR</title>
+</head>
+<body class="d-flex flex-column min-vh-100 collaborator-page">
+
+<!-- Navigation -->
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<!-- Main Content -->
+<main class="flex-grow-1 collaborator-main">
+    <div class="container py-4">
+
+        <!-- ==================== Page Header ==================== -->
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-6 fw-bold">
+                    <i class="bi bi-people-fill me-2 text-primary"></i>Research Collaborators
+                </h1>
+                <p class="collaborator-lead mb-0">
+                    Discover students whose uploaded projects overlap with your topic and connect with them directly.
+                </p>
+            </div>
+        </div>
+
+        <!-- ==================== Flash Messages ==================== -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${warningMessage}" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>
+            <span th:text="${warningMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- ==================== Tabs ==================== -->
+        <ul class="nav nav-tabs mb-4" id="collabTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="discover-tab" data-bs-toggle="tab"
+                        data-bs-target="#discover" type="button" role="tab" aria-selected="true">
+                    <i class="bi bi-search me-1"></i> Discover
+                    <span th:if="${collaborators != null && !collaborators.isEmpty()}"
+                          class="badge bg-primary ms-1"
+                          th:text="${collaborators.size()}"></span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pending-tab" data-bs-toggle="tab"
+                        data-bs-target="#pending" type="button" role="tab" aria-selected="false">
+                    <i class="bi bi-inbox me-1"></i> Incoming Requests
+                    <span th:if="${pendingRequests != null && !pendingRequests.isEmpty()}"
+                          class="badge bg-warning text-dark ms-1"
+                          th:text="${pendingRequests.size()}"></span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sent-tab" data-bs-toggle="tab"
+                        data-bs-target="#sent" type="button" role="tab" aria-selected="false">
+                    <i class="bi bi-send me-1"></i> Sent Requests
+                    <span th:if="${sentRequests != null && !sentRequests.isEmpty()}"
+                          class="badge bg-secondary ms-1"
+                          th:text="${sentRequests.size()}"></span>
+                </button>
+            </li>
+        </ul>
+
+        <!-- ==================== Tab Content ==================== -->
+        <div class="tab-content" id="collabTabContent">
+
+            <div class="tab-pane fade show active" id="discover" role="tabpanel">
+                <!-- ===== Discover Tab ===== -->
+
+                <!-- Empty State -->
+                <div th:if="${collaborators == null || collaborators.isEmpty()}" class="text-center py-5">
+                    <div class="card border-0 shadow-sm mx-auto" style="max-width: 500px;">
+                        <div class="card-body py-5">
+                            <i class="bi bi-people display-1 collaborator-muted mb-3 d-block"></i>
+                            <h4 class="fw-semibold mb-3">No Collaborators Found</h4>
+                            <p class="collaborator-muted mb-4">
+                                Add clear keywords, a stronger abstract, or more project details. Matching students
+                                will appear here once related work exists in IRIR.
+                            </p>
+                            <a th:href="@{/student/projects}" class="btn btn-outline-primary">
+                                <i class="bi bi-folder2-open me-1"></i> My Projects
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collaborator Cards Grid -->
+                <div th:if="${collaborators != null && !collaborators.isEmpty()}" class="row g-4">
+                    <div th:each="collab : ${collaborators}" class="col-lg-6 col-xl-4">
+                        <div class="card h-100 border-0 shadow-sm collaborator-card">
+                            <div class="card-body d-flex flex-column">
+
+                                <!-- Header: Name + Department -->
+                                <div class="d-flex align-items-start mb-3">
+                                    <div class="avatar-circle me-3 flex-shrink-0">
+                                        <span th:text="${collab.fullName.substring(0,1).toUpperCase()}"
+                                              class="avatar-initial"></span>
+                                    </div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <h5 class="card-title mb-1 fw-semibold text-truncate"
+                                            th:text="${collab.fullName}">Student Name</h5>
+                                        <p class="collaborator-muted small mb-0">
+                                            <i class="bi bi-mortarboard me-1"></i>
+                                            <span th:text="${collab.department != null && !collab.department.isBlank() ? collab.department : 'Computer Science'}">Department</span>
+                                        </p>
+                                        <p th:if="${collab.regNumber != null && !collab.regNumber.isBlank()}" class="collaborator-muted small mb-0">
+                                            <i class="bi bi-card-text me-1"></i>
+                                            <span th:text="${collab.regNumber}">Reg Number</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Overlap Score Progress Bar -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="small fw-medium collaborator-muted">Research Overlap</span>
+                                        <span class="badge"
+                                              th:classappend="${collab.overlapScore >= 0.7 ? 'bg-success' : (collab.overlapScore >= 0.4 ? 'bg-warning text-dark' : 'bg-info')}"
+                                              th:text="${#numbers.formatDecimal(collab.overlapScore * 100, 0, 0) + '%'}">85%</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar"
+                                             th:classappend="${collab.overlapScore >= 0.7 ? 'bg-success' : (collab.overlapScore >= 0.4 ? 'bg-warning' : 'bg-info')}"
+                                             role="progressbar"
+                                             th:style="'width: ' + ${#numbers.formatDecimal(collab.overlapScore * 100, 0, 0)} + '%'"
+                                             th:attr="aria-valuenow=${collab.overlapScore * 100}"
+                                             aria-valuemin="0" aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Research Interests (badges) -->
+                                <div th:if="${collab.researchInterests != null && !collab.researchInterests.isEmpty()}" class="mb-3">
+                                    <span class="small fw-medium collaborator-muted d-block mb-1">
+                                        <i class="bi bi-tags me-1"></i>Research Interests
+                                    </span>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <span th:each="interest : ${collab.researchInterests.split(',')}"
+                                              class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 fw-normal"
+                                              th:text="${interest.trim()}">AI</span>
+                                    </div>
+                                </div>
+
+                                <!-- Top Matching Project -->
+                                <div th:if="${collab.matchingProjects != null && !collab.matchingProjects.isEmpty()}" class="mb-3">
+                                    <span class="small fw-medium collaborator-muted d-block mb-1">
+                                        <i class="bi bi-folder me-1"></i>Similar Projects in IRIR
+                                    </span>
+                                    <ul class="list-unstyled mb-0">
+                                        <li th:each="proj, iterStat : ${collab.matchingProjects}"
+                                            th:if="${iterStat.index < 3}"
+                                            class="small collaborator-text-strong">
+                                            <i class="bi bi-dot"></i>
+                                            <span th:text="${proj}" class="text-truncate d-inline-block" style="max-width: 250px; vertical-align: bottom;">Project Title</span>
+                                        </li>
+                                        <li th:if="${collab.matchingProjects.size() > 3}" class="small collaborator-muted">
+                                            <i class="bi bi-three-dots"></i>
+                                            and <span th:text="${collab.matchingProjects.size() - 3}">2</span> more
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <!-- Spacer to push button to bottom -->
+                                <div class="mt-auto pt-3 collaborator-divider">
+                                    <div class="d-flex gap-2">
+                                        <button th:if="${connectedUserIds.contains(collab.userId)}"
+                                                type="button"
+                                                class="btn btn-success btn-sm w-100"
+                                                disabled>
+                                            <i class="bi bi-check-circle me-1"></i> Connected
+                                        </button>
+                                        <button th:if="${incomingRequestUserIds.contains(collab.userId)}"
+                                                type="button"
+                                                class="btn btn-warning btn-sm w-100"
+                                                onclick="showCollaboratorTab('pending-tab')">
+                                            <i class="bi bi-inbox me-1"></i> Review Request
+                                        </button>
+                                        <button th:if="${pendingSentUserIds.contains(collab.userId)}"
+                                                type="button"
+                                                class="btn btn-secondary btn-sm w-100"
+                                                disabled>
+                                            <i class="bi bi-hourglass-split me-1"></i> Request Pending
+                                        </button>
+                                        <form th:if="${!connectedUserIds.contains(collab.userId) && !incomingRequestUserIds.contains(collab.userId) && !pendingSentUserIds.contains(collab.userId)}"
+                                              th:action="@{/student/collaborators/request/{id}(id=${collab.userId})}"
+                                              method="post" class="flex-grow-1">
+                                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                                <i class="bi bi-person-plus me-1"></i> Send Request
+                                            </button>
+                                        </form>
+                                        <a th:if="${collab.contactEmail != null && !collab.contactEmail.isBlank()}"
+                                           th:href="'mailto:' + ${collab.contactEmail}"
+                                           class="btn btn-outline-secondary btn-sm collaborator-mail-btn"
+                                           title="Send email">
+                                            <i class="bi bi-envelope"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Incoming Requests Tab ===== -->
+            <div class="tab-pane fade" id="pending" role="tabpanel">
+                <div th:if="${pendingRequests == null || pendingRequests.isEmpty()}" class="text-center py-5">
+                    <i class="bi bi-inbox display-4 collaborator-muted mb-3 d-block"></i>
+                    <p class="collaborator-muted">No pending collaboration requests.</p>
+                </div>
+
+                <div th:if="${pendingRequests != null && !pendingRequests.isEmpty()}" class="row g-3">
+                    <div th:each="req : ${pendingRequests}" class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="avatar-circle avatar-sm me-2 flex-shrink-0">
+                                        <span th:text="${req.sender.firstName.substring(0,1).toUpperCase()}"
+                                              class="avatar-initial small"></span>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-semibold" th:text="${req.sender.fullName}">Name</h6>
+                                        <small class="collaborator-muted" th:text="${req.sender.email}">email</small>
+                                    </div>
+                                </div>
+                                <p class="small collaborator-muted mb-3">
+                                    <i class="bi bi-clock me-1"></i>
+                                    Sent <span th:text="${#temporals.format(req.createdAt, 'MMM d, yyyy')}">date</span>
+                                </p>
+                                <div class="d-flex gap-2">
+                                    <form th:action="@{/student/collaborators/respond/{id}(id=${req.id})}"
+                                          method="post" class="flex-grow-1">
+                                        <input type="hidden" name="response" value="ACCEPTED" />
+                                        <button type="submit" class="btn btn-success btn-sm w-100">
+                                            <i class="bi bi-check-lg me-1"></i> Accept
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/student/collaborators/respond/{id}(id=${req.id})}"
+                                          method="post" class="flex-grow-1">
+                                        <input type="hidden" name="response" value="DECLINED" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                            <i class="bi bi-x-lg me-1"></i> Decline
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Sent Requests Tab ===== -->
+            <div class="tab-pane fade" id="sent" role="tabpanel">
+                <div th:if="${sentRequests == null || sentRequests.isEmpty()}" class="text-center py-5">
+                    <i class="bi bi-send display-4 collaborator-muted mb-3 d-block"></i>
+                    <p class="collaborator-muted">You haven't sent any collaboration requests yet.</p>
+                </div>
+
+                <div th:if="${sentRequests != null && !sentRequests.isEmpty()}" class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Recipient</th>
+                                <th>Department</th>
+                                <th>Sent</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="req : ${sentRequests}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle avatar-sm me-2 flex-shrink-0">
+                                            <span th:text="${req.receiver.firstName.substring(0,1).toUpperCase()}"
+                                                  class="avatar-initial small"></span>
+                                        </div>
+                                        <div>
+                                            <span class="fw-medium" th:text="${req.receiver.fullName}">Name</span>
+                                            <br>
+                                            <small class="collaborator-muted" th:text="${req.receiver.email}">email</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td th:text="${req.receiver.department != null && !req.receiver.department.isBlank() ? req.receiver.department : 'Computer Science'}">Dept</td>
+                                <td>
+                                    <small th:text="${#temporals.format(req.createdAt, 'MMM d, yyyy')}">date</small>
+                                </td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${req.status.name() == 'PENDING' ? 'bg-warning text-dark' :
+                                                          (req.status.name() == 'ACCEPTED' ? 'bg-success' : 'bg-danger')}"
+                                          th:text="${req.status.name()}">PENDING</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div><!-- /tab-content -->
+    </div><!-- /container -->
+</main>
+
+<!-- Footer -->
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<!-- Scripts -->
+<script th:replace="~{fragments/layout :: scripts}"></script>
+
+<script>
+    function showCollaboratorTab(tabId) {
+        const trigger = document.getElementById(tabId);
+        if (!trigger || typeof bootstrap === 'undefined') {
+            return;
+        }
+
+        bootstrap.Tab.getOrCreateInstance(trigger).show();
+    }
+</script>
+
+<!-- Custom Styles for Collaborator Cards -->
+<style>
+    .collaborator-main {
+        padding-top: 5rem;
+    }
+    .collaborator-page {
+        background:
+            radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), transparent 30%),
+            radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 28%),
+            linear-gradient(180deg, rgba(9, 15, 28, 0.98), rgba(14, 23, 40, 0.98));
+    }
+    .collaborator-page .card,
+    .collaborator-page .table,
+    .collaborator-page .table thead,
+    .collaborator-page .table tbody {
+        color: #f4f7fb;
+    }
+    .collaborator-page .card {
+        background: rgba(18, 27, 46, 0.94);
+        border: 1px solid rgba(148, 163, 184, 0.16) !important;
+        box-shadow: 0 18px 32px rgba(0, 0, 0, 0.2);
+    }
+    .collaborator-lead {
+        color: rgba(244, 247, 251, 0.88);
+        font-size: 1.05rem;
+        max-width: 760px;
+    }
+    .collaborator-muted {
+        color: rgba(214, 223, 237, 0.78) !important;
+    }
+    .collaborator-text-strong {
+        color: #f4f7fb;
+    }
+    .collaborator-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 12px;
+    }
+    .collaborator-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 18px 32px rgba(0, 0, 0, 0.28) !important;
+    }
+    .avatar-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    .avatar-circle.avatar-sm {
+        width: 36px;
+        height: 36px;
+        font-size: 0.85rem;
+    }
+    .progress {
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    .progress-bar {
+        border-radius: 10px;
+        transition: width 0.6s ease;
+    }
+    .collaborator-divider {
+        border-top: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .collaborator-mail-btn {
+        min-width: 42px;
+    }
+    .nav-tabs {
+        border-bottom-color: rgba(148, 163, 184, 0.16);
+    }
+    .nav-tabs .nav-link {
+        color: rgba(222, 231, 241, 0.82);
+        font-weight: 500;
+        border: 1px solid transparent;
+    }
+    .nav-tabs .nav-link.active {
+        color: #ffffff;
+        font-weight: 600;
+        background: rgba(37, 99, 235, 0.18);
+        border-color: rgba(59, 130, 246, 0.35);
+    }
+    .collaborator-page .table {
+        --bs-table-bg: transparent;
+        --bs-table-color: #f4f7fb;
+        --bs-table-border-color: rgba(148, 163, 184, 0.18);
+        --bs-table-hover-color: #ffffff;
+        --bs-table-hover-bg: rgba(255, 255, 255, 0.04);
+    }
+    .collaborator-page .table-light {
+        --bs-table-bg: rgba(255, 255, 255, 0.06);
+        --bs-table-color: #f8fafc;
+    }
+    .collaborator-page .btn-outline-secondary {
+        color: #dbe5f1;
+        border-color: rgba(219, 229, 241, 0.35);
+    }
+    .collaborator-page .btn-outline-secondary:hover {
+        color: #0b1220;
+        background: #dbe5f1;
+    }
+    @media (max-width: 767.98px) {
+        .collaborator-main {
+            padding-top: 4.75rem;
+        }
+        .collaborator-mail-btn {
+            min-width: 40px;
+        }
+    }
+</style>
+
+</body>
+</html>
