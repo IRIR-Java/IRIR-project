@@ -210,6 +210,80 @@
                         </div>
                     </div>
 
+                    <!-- AI Insights -->
+                    <div class="content-card mb-4" th:if="${projectInsight != null}">
+                        <div class="content-card-header">
+                            <h2><i class="bi bi-stars me-2"></i>AI Insights</h2>
+                        </div>
+                        <div class="content-card-body">
+                            <p class="text-muted small mb-2">Proactive suggestions generated from your submission.</p>
+                            <p class="mb-3" th:text="${projectInsight.summary}">Summary</p>
+
+                            <div th:if="${projectInsight.noveltyScore != null}" class="mb-3">
+                                <div class="small text-muted">Estimated novelty</div>
+                                <div class="fw-semibold"
+                                     th:text="${#numbers.formatDecimal(projectInsight.noveltyScore * 100, 1, 1) + '%'}">0%</div>
+                            </div>
+
+                            <div th:if="${projectInsight.strengths != null}">
+                                <h6 class="fw-semibold">Strengths</h6>
+                                <ul class="ps-3 mb-3">
+                                    <li th:each="item : ${#strings.arraySplit(projectInsight.strengths, '\n')}"
+                                        th:text="${item}">Strength</li>
+                                </ul>
+                            </div>
+                            <div th:if="${projectInsight.gaps != null}">
+                                <h6 class="fw-semibold">Gaps</h6>
+                                <ul class="ps-3 mb-3">
+                                    <li th:each="item : ${#strings.arraySplit(projectInsight.gaps, '\n')}"
+                                        th:text="${item}">Gap</li>
+                                </ul>
+                            </div>
+                            <div th:if="${projectInsight.nextSteps != null}">
+                                <h6 class="fw-semibold">Next Steps</h6>
+                                <ul class="ps-3 mb-3">
+                                    <li th:each="item : ${#strings.arraySplit(projectInsight.nextSteps, '\n')}"
+                                        th:text="${item}">Next step</li>
+                                </ul>
+                            </div>
+                            <div th:if="${projectInsight.suggestedKeywords != null}">
+                                <h6 class="fw-semibold">Suggested Keywords</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <span class="badge bg-secondary"
+                                          th:each="kw : ${#strings.arraySplit(projectInsight.suggestedKeywords, ',')}"
+                                          th:text="${#strings.trim(kw)}">keyword</span>
+                                </div>
+                            </div>
+                            <div th:if="${projectInsight.riskFlags != null}" class="mt-3">
+                                <h6 class="fw-semibold text-warning">Risk Flags</h6>
+                                <ul class="ps-3 mb-0">
+                                    <li th:each="item : ${#strings.arraySplit(projectInsight.riskFlags, '\n')}"
+                                        th:text="${item}">Risk</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review Feedback -->
+                    <div class="content-card mb-4" th:if="${latestReview != null}">
+                        <div class="content-card-header">
+                            <h2><i class="bi bi-chat-square-text me-2"></i>Latest Review</h2>
+                        </div>
+                        <div class="content-card-body">
+                            <div class="mb-2">
+                                <span class="badge"
+                                      th:classappend="${latestReview.decision.name() == 'APPROVED'} ? 'bg-success' :
+                                                     (${latestReview.decision.name() == 'REJECTED'} ? 'bg-danger' : 'bg-warning text-dark')"
+                                      th:text="${latestReview.decision}">Decision</span>
+                            </div>
+                            <div class="text-muted small mb-2"
+                                 th:text="${#temporals.format(latestReview.reviewedAt, 'dd MMM yyyy, HH:mm')}">date</div>
+                            <p class="mb-0" th:text="${latestReview.comments != null ? latestReview.comments : 'No comments provided.'}">
+                                Comments
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Collaborator Recommendations Card -->
                     <div class="content-card">
                         <div class="content-card-header">

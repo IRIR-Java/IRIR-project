@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{fragments/layout :: head('Review Project')}"></head>
+
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="dashboard-title">
+                            <i class="bi bi-journal-text me-2"></i>
+                            Review Project
+                        </h1>
+                        <p class="dashboard-subtitle" th:text="${project.title}">Project Title</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <a th:href="@{/supervisor/reviews}" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-arrow-left me-2"></i> Back to Reviews
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${successMessage}" class="alert alert-success">
+                <i class="bi bi-check-circle me-2"></i>
+                <span th:text="${successMessage}">Success</span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span th:text="${errorMessage}">Error</span>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="content-card mb-4">
+                        <div class="content-card-header">
+                            <h2><i class="bi bi-info-circle me-2"></i>Project Overview</h2>
+                        </div>
+                        <div class="content-card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4 text-muted">Student</div>
+                                <div class="col-md-8" th:text="${project.submittedBy.fullName}">Student Name</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4 text-muted">Status</div>
+                                <div class="col-md-8">
+                                    <span class="badge"
+                                          th:classappend="${project.status.name() == 'APPROVED'} ? 'bg-success' :
+                                                         (${project.status.name() == 'REJECTED'} ? 'bg-danger' :
+                                                         (${project.status.name() == 'FLAGGED'} ? 'bg-warning text-dark' :
+                                                         (${project.status.name() == 'SUBMITTED' || project.status.name() == 'UNDER_REVIEW'} ? 'bg-info' : 'bg-secondary')))"
+                                          th:text="${project.status}">Status</span>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4 text-muted">Submitted</div>
+                                <div class="col-md-8" th:text="${project.submittedAt != null ? #temporals.format(project.submittedAt, 'dd MMM yyyy, HH:mm') : 'Not submitted'}">Not submitted</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4 text-muted">Keywords</div>
+                                <div class="col-md-8">
+                                    <div class="d-flex flex-wrap gap-2" th:if="${project.keywords != null && !project.keywords.isEmpty()}">
+                                        <span class="badge bg-secondary" th:each="kw : ${project.keywords}" th:text="${kw}">keyword</span>
+                                    </div>
+                                    <span class="text-muted" th:if="${project.keywords == null || project.keywords.isEmpty()}">No keywords provided</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-muted mb-2">Abstract</div>
+                                <p class="mb-0" th:text="${project.abstractText != null && !project.abstractText.isBlank() ? project.abstractText : 'No abstract provided.'}">Abstract text</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-card mb-4">
+                        <div class="content-card-header">
+                            <h2><i class="bi bi-paperclip me-2"></i>Files</h2>
+                        </div>
+                        <div class="content-card-body">
+                            <div th:if="${project.files == null || project.files.isEmpty()}" class="text-muted">
+                                No files available.
+                            </div>
+                            <div th:if="${project.files != null && !project.files.isEmpty()}" class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Filename</th>
+                                            <th>Type</th>
+                                            <th>Size</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="file, iter : ${project.files}">
+                                            <td th:text="${iter.index + 1}">1</td>
+                                            <td th:text="${file.fileName}">file.pdf</td>
+                                            <td th:text="${file.fileType != null ? file.fileType : '-'}">type</td>
+                                            <td th:text="${file.fileSize != null ? (file.fileSize / 1024) + ' KB' : '-'}">size</td>
+                                            <td>
+                                                <a th:href="@{/student/projects/{id}/files/{fileId}(id=${project.id}, fileId=${file.id})}"
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-download me-1"></i> Download
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="content-card-header">
+                            <h2><i class="bi bi-chat-square-text me-2"></i>Review History</h2>
+                        </div>
+                        <div class="content-card-body">
+                            <div th:if="${reviews == null || reviews.isEmpty()}" class="text-muted">
+                                No reviews submitted yet.
+                            </div>
+                            <div th:if="${reviews != null && !reviews.isEmpty()}" class="list-group list-group-flush">
+                                <div class="list-group-item px-0 py-3 border-0" th:each="review : ${reviews}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <span class="badge"
+                                                  th:classappend="${review.decision.name() == 'APPROVED'} ? 'bg-success' :
+                                                                 (${review.decision.name() == 'REJECTED'} ? 'bg-danger' : 'bg-warning text-dark')"
+                                                  th:text="${review.decision}">Decision</span>
+                                            <div class="text-muted small mt-1"
+                                                 th:text="${#temporals.format(review.reviewedAt, 'dd MMM yyyy, HH:mm')}">date</div>
+                                        </div>
+                                    </div>
+                                    <p class="mb-0 mt-2" th:text="${review.comments != null ? review.comments : 'No comments provided.'}">Comments</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="content-card mb-4">
+                        <div class="content-card-header">
+                            <h2><i class="bi bi-diagram-3 me-2"></i>Similarity Report</h2>
+                        </div>
+                        <div class="content-card-body">
+                            <div class="text-center mb-3">
+                                <span class="badge fs-6 px-3 py-2"
+                                      th:classappend="${verdictLabel == 'Original Work'} ? 'bg-success' :
+                                                     (${verdictLabel == 'Similar Work Detected'} ? 'bg-warning text-dark' : 'bg-danger')"
+                                      th:text="${verdictLabel}">Verdict</span>
+                            </div>
+                            <div class="text-center mb-2">
+                                <span class="fs-3 fw-bold"
+                                      th:classappend="${maxSimilarityScore != null && maxSimilarityScore >= 0.70} ? 'text-danger' :
+                                                     (${maxSimilarityScore != null && maxSimilarityScore >= 0.40} ? 'text-warning' : 'text-success')"
+                                      th:text="${maxSimilarityScore != null ? #numbers.formatDecimal(maxSimilarityScore * 100, 1, 1) + '%' : '0.0%'}">0.0%</span>
+                                <div class="text-muted small">Maximum Similarity Score</div>
+                            </div>
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar"
+                                     role="progressbar"
+                                     th:classappend="${maxSimilarityScore != null && maxSimilarityScore >= 0.70} ? 'bg-danger' :
+                                                    (${maxSimilarityScore != null && maxSimilarityScore >= 0.40} ? 'bg-warning' : 'bg-success')"
+                                     th:style="'width: ' + ${maxSimilarityScore != null ? #numbers.formatDecimal(maxSimilarityScore * 100, 1, 0) : '0'} + '%'"
+                                     th:attr="aria-valuenow=${maxSimilarityScore != null ? maxSimilarityScore * 100 : 0}"
+                                     aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                            <div th:if="${similarityReports != null && !similarityReports.isEmpty()}">
+                                <h6 class="fw-semibold mb-2">Matched Projects</h6>
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item px-0 py-2 border-0" th:each="report : ${similarityReports}">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="me-2" style="min-width: 0;">
+                                                <div class="fw-semibold text-truncate" th:text="${report.targetProject.title}">Title</div>
+                                                <div class="text-muted small" th:if="${report.targetProject.submittedBy != null}"
+                                                     th:text="'by ' + ${report.targetProject.submittedBy.firstName} + ' ' + ${report.targetProject.submittedBy.lastName}">by Author</div>
+                                            </div>
+                                            <span class="badge flex-shrink-0"
+                                                  th:classappend="${report.similarityScore >= 0.70} ? 'bg-danger' :
+                                                                 (${report.similarityScore >= 0.40} ? 'bg-warning text-dark' : 'bg-success')"
+                                                  th:text="${#numbers.formatDecimal(report.similarityScore * 100, 1, 1) + '%'}">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:if="${similarityReports == null || similarityReports.isEmpty()}" class="text-muted small">
+                                No similar projects found.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="content-card-header">
+                            <h2><i class="bi bi-check2-square me-2"></i>Submit Review</h2>
+                        </div>
+                        <div class="content-card-body">
+                            <form th:action="@{/supervisor/review/{id}(id=${project.id})}" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label">Decision</label>
+                                    <select class="form-select" name="decision" required>
+                                        <option value="" disabled selected>Select decision</option>
+                                        <option th:each="option : ${reviewDecisionOptions}"
+                                                th:value="${option}"
+                                                th:text="${option}">Decision</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Comments</label>
+                                    <textarea class="form-control" name="comments" rows="5"
+                                              placeholder="Provide feedback for the student (optional)"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-send me-1"></i> Submit Review
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

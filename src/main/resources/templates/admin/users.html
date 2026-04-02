@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{fragments/layout :: head('User Management')}"></head>
+
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="dashboard-title">
+                            <i class="bi bi-people me-2"></i>
+                            User Management
+                        </h1>
+                        <p class="dashboard-subtitle">Search and manage system users</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <a th:href="@{/admin/users/create}" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-person-plus me-2"></i> Create User
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card mb-4">
+                <div class="content-card-body">
+                    <form class="row g-2" th:action="@{/admin/users}" method="get">
+                        <div class="col-md-10">
+                            <input type="text" class="form-control" name="q" placeholder="Search by name or email"
+                                   th:value="${query}">
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-search me-1"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="content-card-header">
+                    <h2><i class="bi bi-list-ul me-2"></i>Users</h2>
+                </div>
+                <div class="content-card-body">
+                    <div th:if="${users == null || users.isEmpty()}" class="empty-state">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <h4 class="mt-3">No Users Found</h4>
+                        <p class="text-muted">Try a different search term.</p>
+                    </div>
+                    <div th:if="${users != null && !users.isEmpty()}" class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Department</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="user, iter : ${users}">
+                                    <td th:text="${iter.index + 1}">1</td>
+                                    <td th:text="${user.fullName}">Name</td>
+                                    <td th:text="${user.email}">email@example.com</td>
+                                    <td th:text="${user.role}">ROLE</td>
+                                    <td th:text="${user.department != null ? user.department : '-'}">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

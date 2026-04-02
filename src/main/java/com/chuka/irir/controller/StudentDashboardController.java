@@ -1,11 +1,13 @@
 package com.chuka.irir.controller;
 
 import com.chuka.irir.dto.SearchDTO;
+import com.chuka.irir.dto.StudentInsights;
 import com.chuka.irir.model.Project;
 import com.chuka.irir.model.User;
 import com.chuka.irir.repository.ProjectRepository;
 import com.chuka.irir.repository.UserRepository;
 import com.chuka.irir.service.ProjectSearchService;
+import org.springframework.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
@@ -55,6 +57,8 @@ public class StudentDashboardController {
         model.addAttribute("totalDownloads", totalDownloads);
         model.addAttribute("pendingReviews", pendingReviews);
         model.addAttribute("hasWarnings", hasWarnings);
+
+        model.addAttribute("insights", buildInsights(projects));
         
         String collabProject = projects.isEmpty() ? "your project" : projects.get(0).getTitle();
         model.addAttribute("collabRequests", List.of(
@@ -75,6 +79,47 @@ public class StudentDashboardController {
         model.addAttribute("results", results);
 
         return "student-dashboard";
+    }
+
+    private StudentInsights buildInsights(List<Project> projects) {
+        if (projects == null || projects.isEmpty()) {
+            return new StudentInsights(
+                    List.of("Start with a clear problem statement", "Collect at least 3 domain keywords"),
+                    List.of("Upload your first project draft", "Add an abstract to improve discoverability")
+            );
+        }
+
+        var keywordCounts = projects.stream()
+                .filter(p -> p.getKeywords() != null)
+                .flatMap(p -> p.getKeywords().stream())
+                .filter(StringUtils::hasText)
+                .map(String::toLowerCase)
+                .collect(java.util.stream.Collectors.groupingBy(k -> k, java.util.stream.Collectors.counting()));
+
+        List<String> trendingTopics = keywordCounts.entrySet().stream()
+                .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
+                .limit(6)
+                .map(java.util.Map.Entry::getKey)
+                .collect(java.util.stream.Collectors.toList());
+
+        List<String> actionItems = new java.util.ArrayList<>();
+        if (projects.stream().anyMatch(p -> p.getStatus().name().equals("DRAFT"))) {
+            actionItems.add("Finish and submit your draft project");
+        }
+        if (projects.stream().anyMatch(p -> p.getStatus().name().equals("FLAGGED"))) {
+            actionItems.add("Review similarity warnings and adjust citations");
+        }
+        if (projects.stream().anyMatch(p -> !StringUtils.hasText(p.getAbstractText()))) {
+            actionItems.add("Add or expand abstracts for incomplete projects");
+        }
+        if (trendingTopics.isEmpty()) {
+            actionItems.add("Add 3-5 keywords to improve discovery and recommendations");
+        }
+        if (actionItems.isEmpty()) {
+            actionItems.add("Consider refining methodology and results sections");
+        }
+
+        return new StudentInsights(trendingTopics, actionItems);
     }
 
     @GetMapping("/profile")

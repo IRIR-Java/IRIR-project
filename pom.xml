@@ -66,6 +66,7 @@
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
 
+
         <!-- Bean Validation (Jakarta Validation annotations) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

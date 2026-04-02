@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{fragments/layout :: head('Create User')}"></head>
+
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="dashboard-title">
+                            <i class="bi bi-person-plus me-2"></i>
+                            Create User
+                        </h1>
+                        <p class="dashboard-subtitle">Admin onboarding tools are in progress</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <a th:href="@{/admin/users}" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-arrow-left me-2"></i> Back to Users
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="content-card-header">
+                    <h2><i class="bi bi-info-circle me-2"></i>Coming Soon</h2>
+                </div>
+                <div class="content-card-body">
+                    <p class="mb-0">
+                        User creation workflows will be added next. For now, use the standard registration
+                        flow for student accounts and update roles through the database if needed.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

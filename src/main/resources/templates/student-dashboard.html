@@ -175,6 +175,12 @@
                                           class="badge bg-primary"
                                           th:text="${topic}">Topic</span>
                                 </div>
+                                <div class="mt-3" th:if="${insights.actionItems != null && !insights.actionItems.isEmpty()}">
+                                    <p class="text-muted small mb-2">Recommended next actions:</p>
+                                    <ul class="mb-0 ps-3">
+                                        <li th:each="item : ${insights.actionItems}" th:text="${item}">Action</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
 

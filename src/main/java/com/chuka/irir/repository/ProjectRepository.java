@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -54,4 +55,19 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     /** Find projects for a specific academic year. */
     List<Project> findByAcademicYearOrderByCreatedAtDesc(Integer academicYear);
+
+    /** Find approved projects submitted between two dates. Used for trend analysis. */
+    @Query("SELECT p FROM Project p WHERE p.status = com.chuka.irir.model.ProjectStatus.APPROVED AND p.submittedAt BETWEEN :from AND :to")
+    List<Project> findApprovedBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    /** Find recently submitted or flagged projects for cluster detection. */
+    @Query("SELECT p FROM Project p WHERE p.status IN (com.chuka.irir.model.ProjectStatus.SUBMITTED, com.chuka.irir.model.ProjectStatus.FLAGGED) AND p.submittedAt >= :cutoff")
+    List<Project> findRecentSubmissions(@Param("cutoff") LocalDateTime cutoff);
+
+    /** Count approved projects that have a specific keyword. */
+    @Query("SELECT COUNT(DISTINCT p) FROM Project p JOIN p.keywords k WHERE LOWER(k) = LOWER(:keyword) AND p.status = com.chuka.irir.model.ProjectStatus.APPROVED")
+    long countApprovedByKeyword(@Param("keyword") String keyword);
+
+    /** Find all projects with a specific status (unordered). */
+    List<Project> findByStatus(ProjectStatus status);
 }

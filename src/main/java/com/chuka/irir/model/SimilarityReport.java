@@ -32,6 +32,18 @@ public class SimilarityReport {
     @Column(nullable = false)
     private boolean flagged;
 
+    @Column(name = "title_similarity_score")
+    private Double titleSimilarityScore;
+
+    @Column(name = "abstract_similarity_score")
+    private Double abstractSimilarityScore;
+
+    @Column(name = "keywords_similarity_score")
+    private Double keywordsSimilarityScore;
+
+    @Column(name = "weighted_composite_score")
+    private Double weightedCompositeScore;
+
     // Relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "source_project_id", nullable = false)

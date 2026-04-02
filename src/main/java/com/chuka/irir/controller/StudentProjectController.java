@@ -6,11 +6,14 @@ import com.chuka.irir.model.Project;
 import com.chuka.irir.model.ProjectFile;
 import com.chuka.irir.model.SimilarityReport;
 import com.chuka.irir.model.User;
+import com.chuka.irir.model.Review;
 import com.chuka.irir.repository.SimilarityReportRepository;
+import com.chuka.irir.repository.ReviewRepository;
 import com.chuka.irir.repository.UserRepository;
 import com.chuka.irir.service.FileStorageService;
 import com.chuka.irir.service.ProjectService;
 import com.chuka.irir.service.SimilarityDetectionService;
+import com.chuka.irir.service.AiInsightService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,17 +50,23 @@ public class StudentProjectController {
     private final FileStorageService fileStorageService;
     private final SimilarityReportRepository similarityReportRepository;
     private final SimilarityDetectionService similarityDetectionService;
+    private final ReviewRepository reviewRepository;
+    private final AiInsightService aiInsightService;
 
     public StudentProjectController(ProjectService projectService,
                                     UserRepository userRepository,
                                     FileStorageService fileStorageService,
                                     SimilarityReportRepository similarityReportRepository,
-                                    SimilarityDetectionService similarityDetectionService) {
+                                    SimilarityDetectionService similarityDetectionService,
+                                    ReviewRepository reviewRepository,
+                                    AiInsightService aiInsightService) {
         this.projectService = projectService;
         this.userRepository = userRepository;
         this.fileStorageService = fileStorageService;
         this.similarityReportRepository = similarityReportRepository;
         this.similarityDetectionService = similarityDetectionService;
+        this.reviewRepository = reviewRepository;
+        this.aiInsightService = aiInsightService;
     }
 
     @GetMapping
@@ -208,6 +217,7 @@ public class StudentProjectController {
         String verdictLabel = maxSimilarityScore != null
                 ? similarityDetectionService.classifyScore(maxSimilarityScore)
                 : "Original Work";
+        List<Review> reviews = reviewRepository.findByProjectIdOrderByReviewedAtDesc(project.getId());
 
         model.addAttribute("user", user);
         model.addAttribute("project", project);
@@ -215,6 +225,9 @@ public class StudentProjectController {
         model.addAttribute("similarityReports", similarityReports);
         model.addAttribute("maxSimilarityScore", maxSimilarityScore);
         model.addAttribute("verdictLabel", verdictLabel);
+        model.addAttribute("reviews", reviews);
+        model.addAttribute("latestReview", reviews.isEmpty() ? null : reviews.get(0));
+        model.addAttribute("projectInsight", aiInsightService.getOrGenerate(project));
         model.addAttribute("pageTitle", "Project Details");
         return "student/projects/detail";
     }
