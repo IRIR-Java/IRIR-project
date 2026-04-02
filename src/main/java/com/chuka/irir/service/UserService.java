@@ -58,12 +58,11 @@ public class UserService {
         validateRegistration(dto);
 
         User user = User.builder()
-                .firstName(dto.getFirstName())
-                .lastName(dto.getLastName())
+                .fullName(dto.getFirstName() + " " + dto.getLastName())
                 .email(dto.getEmail())
-                .studentId(dto.getStudentId())
+                .regNumber(dto.getStudentId())
                 .password(passwordEncoder.encode(dto.getPassword())) // BCrypt hash
-                .roles(new HashSet<>(Set.of(Role.STUDENT)))
+                .role(Role.STUDENT)
                 .enabled(true)
                 .accountNonLocked(true)
                 .build();
@@ -134,16 +133,16 @@ public class UserService {
      * @param admin  the admin user performing the action
      * @return the updated User entity
      */
-    public User updateUserRoles(Long userId, Set<Role> roles, User admin) {
+    public User updateUserRoles(Long userId, Role role, User admin) {
         User user = findById(userId);
-        Set<Role> oldRoles = new HashSet<>(user.getRoles());
-        user.setRoles(roles);
+        Role oldRole = user.getRole();
+        user.setRole(role);
         User updatedUser = userRepository.save(user);
 
         logAudit(admin, "USER_ROLE_CHANGED",
-                String.format("Roles changed for %s: %s → %s", user.getEmail(), oldRoles, roles));
+                String.format("Role changed for %s: %s → %s", user.getEmail(), oldRole, role));
 
-        logger.info("Admin {} changed roles for {}: {} → {}", admin.getEmail(), user.getEmail(), oldRoles, roles);
+        logger.info("Admin {} changed role for {}: {} → {}", admin.getEmail(), user.getEmail(), oldRole, role);
         return updatedUser;
     }
 
@@ -181,7 +180,7 @@ public class UserService {
         }
 
         if (dto.getStudentId() != null && !dto.getStudentId().isBlank()
-                && userRepository.existsByStudentId(dto.getStudentId())) {
+                && userRepository.existsByRegNumber(dto.getStudentId())) {
             throw new IllegalArgumentException("Student ID is already registered: " + dto.getStudentId());
         }
 
@@ -205,7 +204,7 @@ public class UserService {
                 .action(action)
                 .details(details)
                 .entityType("User")
-                .entityId(user.getId())
+                .entityId(user.getUserId())
                 .build();
         auditLogRepository.save(log);
     }

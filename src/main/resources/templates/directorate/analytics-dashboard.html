@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  IRIR — Directorate Analytics Dashboard
+  Displays research analytics with Chart.js visualizations and data tables.
+  Accessible only to users with ROLE_DIRECTORATE.
+  ============================================================================
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Analytics Dashboard')}">
+    <title>Analytics Dashboard | IRIR</title>
+</head>
+<body class="d-flex flex-column min-vh-100" style="padding-top: 72px; background-color: #f0f2f5;">
+
+<!-- Navigation Bar -->
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<!-- ==================== Main Content ==================== -->
+<main class="container-fluid px-4 py-4 flex-grow-1">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">
+                <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Research Analytics Dashboard
+            </h1>
+            <p class="text-muted mb-0">
+                Directorate of Research &amp; Extension — Academic Year
+                <span th:text="${currentYear}">2026</span>
+            </p>
+        </div>
+        <div>
+            <a th:href="@{/directorate/export/pdf}" class="btn btn-danger me-2"
+               id="exportPdfBtn">
+                <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
+            </a>
+            <a th:href="@{/directorate/export/excel}" class="btn btn-success"
+               id="exportExcelBtn">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export Excel
+            </a>
+        </div>
+    </div>
+
+    <!-- Flash Message -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- ==================== Summary Stat Cards ==================== -->
+    <div class="row g-3 mb-4">
+        <!-- Total Projects -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #4361ee !important;">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 48px; height: 48px; background: rgba(67,97,238,0.1);">
+                        <i class="bi bi-archive fs-4 text-primary"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0 small text-uppercase">Total Projects</h6>
+                        <h3 class="fw-bold mb-0" th:text="${summaryStats['totalProjects']}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Approved -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #2ec4b6 !important;">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 48px; height: 48px; background: rgba(46,196,182,0.1);">
+                        <i class="bi bi-check-circle fs-4" style="color: #2ec4b6;"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0 small text-uppercase">Approved</h6>
+                        <h3 class="fw-bold mb-0" th:text="${summaryStats['totalApproved']}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Pending Review -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #ff9f1c !important;">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 48px; height: 48px; background: rgba(255,159,28,0.1);">
+                        <i class="bi bi-hourglass-split fs-4" style="color: #ff9f1c;"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0 small text-uppercase">Pending Review</h6>
+                        <h3 class="fw-bold mb-0" th:text="${summaryStats['totalPending']}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Incubation Candidates -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #e71d36 !important;">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 48px; height: 48px; background: rgba(231,29,54,0.1);">
+                        <i class="bi bi-rocket-takeoff fs-4" style="color: #e71d36;"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0 small text-uppercase">Incubation Flagged</h6>
+                        <h3 class="fw-bold mb-0" th:text="${summaryStats['totalIncubation']}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== Charts Row 1 ==================== -->
+    <div class="row g-3 mb-4">
+        <!-- Bar Chart: Projects per Department -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h5 class="card-title fw-semibold mb-0">
+                        <i class="bi bi-bar-chart me-2 text-primary"></i>Projects by Department
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="departmentChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- Line Chart: Monthly Submission Trends -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h5 class="card-title fw-semibold mb-0">
+                        <i class="bi bi-graph-up me-2 text-success"></i>Monthly Submission Trends
+                        (<span th:text="${currentYear}">2026</span>)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== Charts Row 2 ==================== -->
+    <div class="row g-3 mb-4">
+        <!-- Doughnut Chart: Research Domain Distribution -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h5 class="card-title fw-semibold mb-0">
+                        <i class="bi bi-pie-chart me-2 text-warning"></i>Top Research Domains
+                    </h5>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <div style="max-width: 350px; width: 100%;">
+                        <canvas id="domainChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Incubation Candidates Table -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h5 class="card-title fw-semibold mb-0">
+                        <i class="bi bi-rocket-takeoff me-2 text-danger"></i>Incubation Candidates
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" id="incubationTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Student</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="project : ${incubationProjects}">
+                                    <td th:text="${project.title}">Project Title</td>
+                                    <td th:text="${project.owner != null ? project.owner.fullName : 'N/A'}">Student</td>
+                                    <td th:text="${project.department}">Dept</td>
+                                    <td><span class="badge bg-danger">Incubation</span></td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(incubationProjects)}">
+                                    <td colspan="4" class="text-center text-muted py-3">
+                                        No projects have been flagged for incubation yet.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== High-Potential Projects Table ==================== -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 pt-3">
+            <h5 class="card-title fw-semibold mb-0">
+                <i class="bi bi-stars me-2 text-info"></i>High-Potential Projects
+                <small class="text-muted fw-normal ms-2">(Similarity &lt; 40% &amp; Views &gt; 100)</small>
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="highPotentialTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Title</th>
+                            <th>Student</th>
+                            <th>Similarity Score</th>
+                            <th>Views</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="project : ${highPotentialProjects}">
+                            <td>
+                                <span class="fw-semibold" th:text="${project.title}">Title</span>
+                            </td>
+                            <td th:text="${project.owner != null ? project.owner.fullName : 'N/A'}">Student</td>
+                            <td>
+                                <span class="badge rounded-pill"
+                                      th:classappend="${project.similarityScore != null and project.similarityScore < 0.2} ? 'bg-success' : 'bg-info'"
+                                      th:text="${project.similarityScore != null} ? ${#numbers.formatDecimal(project.similarityScore * 100, 1, 1)} + '%' : 'N/A'">
+                                    15.2%
+                                </span>
+                            </td>
+                            <td>
+                                <i class="bi bi-eye me-1 text-muted"></i>
+                                <span th:text="${project.viewCount}">0</span>
+                            </td>
+                            <td class="text-center">
+                                <form th:action="@{/directorate/project/{id}/flag-incubation(id=${project.projectId})}"
+                                      method="post" style="display:inline;">
+                                    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                                    <button type="submit" class="btn btn-warning btn-sm"
+                                            th:disabled="${project.isIncubationFlagged}"
+                                            id="flagBtn">
+                                        <i class="bi bi-flag me-1"></i>
+                                        <span th:text="${project.isIncubationFlagged} ? 'Flagged' : 'Flag for Incubation'">Flag for Incubation</span>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(highPotentialProjects)}">
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-info-circle me-1"></i>
+                                No high-potential projects found yet.
+                                Projects must have similarity score &lt; 40% and over 100 views.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Footer -->
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<!-- ==================== Chart.js CDN ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- ==================== Bootstrap JS ==================== -->
+<script th:replace="~{fragments/layout :: scripts}"></script>
+
+<!--
+  ============================================================================
+  Chart.js Initialization — th:inline="javascript" Data Passing Pattern
+  ============================================================================
+  Thymeleaf's th:inline="javascript" renders Java collections as JSON arrays.
+  The /*[[${ }]]*/ syntax ensures:
+    1. At render time: Thymeleaf replaces the comment with serialized JSON.
+    2. During static prototyping: the default value after */ is used, keeping
+       the file valid JavaScript.
+  IMPORTANT: th:inline MUST be on the <script> tag itself, not a parent element,
+  to ensure proper escaping of special characters in label strings.
+  ============================================================================
+-->
+<script th:inline="javascript">
+    // ---- Data from Spring MVC controller ----
+    const departmentLabels = /*[[${departmentLabels}]]*/ ['CS', 'IT', 'SE'];
+    const departmentCounts = /*[[${departmentCounts}]]*/ [10, 8, 5];
+    const trendLabels      = /*[[${trendLabels}]]*/ ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const trendCounts      = /*[[${trendCounts}]]*/ [0,0,0,0,0,0,0,0,0,0,0,0];
+    const domainLabels     = /*[[${domainLabels}]]*/ ['AI', 'ML', 'Web'];
+    const domainCounts     = /*[[${domainCounts}]]*/ [5, 4, 3];
+
+    // ---- Vibrant color palette for charts ----
+    const palette = [
+        'rgba(67, 97, 238, 0.7)',    // Blue
+        'rgba(46, 196, 182, 0.7)',   // Teal
+        'rgba(255, 159, 28, 0.7)',   // Orange
+        'rgba(231, 29, 54, 0.7)',    // Red
+        'rgba(114, 9, 183, 0.7)',    // Purple
+        'rgba(0, 180, 216, 0.7)',    // Cyan
+        'rgba(249, 65, 68, 0.7)',    // Coral
+        'rgba(39, 174, 96, 0.7)'    // Green
+    ];
+    const paletteSolid = palette.map(c => c.replace('0.7', '1'));
+
+    // ---- Department Bar Chart ----
+    new Chart(document.getElementById('departmentChart'), {
+        type: 'bar',
+        data: {
+            labels: departmentLabels,
+            datasets: [{
+                label: 'Projects',
+                data: departmentCounts,
+                backgroundColor: palette.slice(0, departmentLabels.length),
+                borderColor: paletteSolid.slice(0, departmentLabels.length),
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, precision: 0 },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // ---- Monthly Trends Line Chart ----
+    new Chart(document.getElementById('trendsChart'), {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'Submissions',
+                data: trendCounts,
+                borderColor: 'rgba(46, 196, 182, 1)',
+                backgroundColor: 'rgba(46, 196, 182, 0.15)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: 'rgba(46, 196, 182, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, precision: 0 },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // ---- Research Domains Doughnut Chart ----
+    new Chart(document.getElementById('domainChart'), {
+        type: 'doughnut',
+        data: {
+            labels: domainLabels,
+            datasets: [{
+                data: domainCounts,
+                backgroundColor: palette.slice(0, domainLabels.length),
+                borderColor: paletteSolid.slice(0, domainLabels.length),
+                borderWidth: 2,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '55%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10 }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -90,10 +90,7 @@ public class Project {
     @Builder.Default
     private List<Review> reviews = new ArrayList<>();
 
-    /** Similarity reports comparing this project against others in the repository. */
-    @OneToMany(mappedBy = "sourceProject", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<SimilarityReport> similarityReports = new ArrayList<>();
+
 
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;

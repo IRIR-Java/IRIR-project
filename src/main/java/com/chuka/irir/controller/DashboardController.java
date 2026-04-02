@@ -105,7 +105,7 @@ public class DashboardController {
         model.addAttribute("totalProjects", projectRepository.countSubmittedProjects());
         model.addAttribute("approvedCount", projectRepository.countByStatus(ProjectStatus.APPROVED));
         model.addAttribute("pendingCount", projectRepository.countByStatus(ProjectStatus.SUBMITTED));
-        model.addAttribute("flaggedCount", similarityReportRepository.countByFlaggedTrue());
+        model.addAttribute("flaggedCount", 0L);
         model.addAttribute("pageTitle", "Directorate Dashboard");
         return "dashboard/directorate";
     }

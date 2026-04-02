@@ -16,7 +16,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findByProjectIdOrderByReviewedAtDesc(Long projectId);
 
     /** Find all reviews written by a specific reviewer. */
-    List<Review> findByReviewerIdOrderByReviewedAtDesc(Long reviewerId);
+    List<Review> findByReviewer_UserIdOrderByReviewedAtDesc(Long reviewerId);
 
     /** Count reviews for a specific project. */
     long countByProjectId(Long projectId);

@@ -18,7 +18,7 @@ import java.util.List;
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
     /** Find audit logs for a specific user, paginated. */
-    Page<AuditLog> findByUserIdOrderByTimestampDesc(Long userId, Pageable pageable);
+    Page<AuditLog> findByUser_UserIdOrderByTimestampDesc(Long userId, Pageable pageable);
 
     /** Find audit logs by action type. */
     List<AuditLog> findByActionOrderByTimestampDesc(String action);

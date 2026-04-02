@@ -15,6 +15,7 @@ package com.chuka.irir.model;
  */
 public enum ProjectStatus {
     DRAFT,
+    PENDING,
     SUBMITTED,
     UNDER_REVIEW,
     APPROVED,

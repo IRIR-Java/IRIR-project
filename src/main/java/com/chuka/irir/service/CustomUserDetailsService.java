@@ -53,19 +53,19 @@ public class CustomUserDetailsService implements UserDetailsService {
                 });
 
         // Map IRIR roles to Spring Security granted authorities
-        Collection<? extends GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
-                .collect(Collectors.toSet());
+        Collection<? extends GrantedAuthority> authorities = java.util.Collections.singleton(
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+        );
 
         logger.debug("User '{}' authenticated successfully with roles: {}", email, authorities);
 
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                user.isEnabled(),
+                user.getEnabled(),
                 true,                    // accountNonExpired
                 true,                    // credentialsNonExpired
-                user.isAccountNonLocked(),
+                user.getAccountNonLocked(),
                 authorities
         );
     }

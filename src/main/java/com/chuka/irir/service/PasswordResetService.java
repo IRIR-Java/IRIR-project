@@ -1,9 +1,9 @@
-package com.chuka.rir.service;
+package com.chuka.irir.service;
 
-import com.chuka.rir.model.PasswordResetToken;
-import com.chuka.rir.model.User;
-import com.chuka.rir.repository.PasswordResetTokenRepository;
-import com.chuka.rir.repository.UserRepository;
+import com.chuka.irir.model.PasswordResetToken;
+import com.chuka.irir.model.User;
+import com.chuka.irir.repository.PasswordResetTokenRepository;
+import com.chuka.irir.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -39,7 +39,7 @@ public class PasswordResetService {
                 .orElseThrow(() -> new RuntimeException("No account found with email: " + email));
 
         // Delete any existing unused tokens for this user
-        tokenRepository.deleteAllByUserId(user.getId());
+        tokenRepository.deleteAllByUserId(user.getUserId());
 
         // Generate and save new token
         String token = UUID.randomUUID().toString();
@@ -97,7 +97,7 @@ public class PasswordResetService {
         message.setTo(user.getEmail());
         message.setSubject("IRIR — Password Reset Request");
         message.setText(
-                "Hello " + user.getFirstName() + ",\n\n" +
+                "Hello " + user.getFullName() + ",\n\n" +
                 "We received a request to reset your IRIR account password.\n\n" +
                 "Click the link below to reset your password:\n" +
                 resetLink + "\n\n" +

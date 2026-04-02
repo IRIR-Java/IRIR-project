@@ -8,10 +8,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "collaboration_requests")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = {"sender", "receiver"})
 public class CollaborationRequest {
 
     @Id

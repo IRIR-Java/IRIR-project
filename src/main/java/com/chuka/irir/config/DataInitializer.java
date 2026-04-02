@@ -39,13 +39,12 @@ public class DataInitializer {
                 logger.info("No admin users found — creating default admin account...");
 
                 User admin = User.builder()
-                        .firstName("System")
-                        .lastName("Administrator")
+                        .fullName("System Administrator")
                         .email("admin@chuka.ac.ke")
                         .password(passwordEncoder.encode("Admin@2024"))
-                        .studentId(null)
+                        .regNumber(null)
                         .department("Computer Science")
-                        .roles(Set.of(Role.ADMIN))
+                        .role(Role.ADMIN)
                         .enabled(true)
                         .accountNonLocked(true)
                         .build();

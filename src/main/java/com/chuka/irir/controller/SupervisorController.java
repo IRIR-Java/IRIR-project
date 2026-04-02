@@ -1,9 +1,9 @@
-package com.irir.controller;
+package com.chuka.irir.controller;
 
-import com.irir.dto.FeedbackDTO;
-import com.irir.model.ResearchProject;
-import com.irir.service.FeedbackService;
-import com.irir.service.ResearchProjectService;
+import com.chuka.irir.dto.FeedbackDTO;
+import com.chuka.irir.model.ResearchProject;
+import com.chuka.irir.service.FeedbackService;
+import com.chuka.irir.service.ResearchProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

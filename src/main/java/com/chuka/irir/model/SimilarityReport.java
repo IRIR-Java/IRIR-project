@@ -8,10 +8,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "similarity_reports")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = {"researchProject"})
 public class SimilarityReport {
 
     @Id

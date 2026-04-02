@@ -9,10 +9,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "supervisor_feedbacks")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = {"researchProject", "supervisor"})
 public class SupervisorFeedback {
 
     @Id

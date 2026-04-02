@@ -19,6 +19,10 @@ public interface ResearchProjectRepository extends JpaRepository<ResearchProject
     
     List<ResearchProject> findByDepartment(String department);
 
+    List<ResearchProject> findByIsIncubationFlaggedTrue();
+
+    List<ResearchProject> findBySimilarityScoreLessThanAndViewCountGreaterThan(double score, int views);
+
     @Query("SELECT r FROM ResearchProject r WHERE r.isIncubationFlagged = true")
     List<ResearchProject> findIncubationFlaggedProjects();
 

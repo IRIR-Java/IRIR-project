@@ -1,4 +1,4 @@
-package com.irir.dto;
+package com.chuka.irir.dto;
 
 import jakarta.validation.constraints.Size;
 

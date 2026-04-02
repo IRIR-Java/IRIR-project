@@ -29,8 +29,20 @@
         <lucene.version>9.9.2</lucene.version>
         <corenlp.version>4.5.4</corenlp.version>
         <bootstrap.version>5.3.2</bootstrap.version>
-        <lombok.version>1.18.30</lombok.version>
+        <lombok.version>1.18.36</lombok.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.itextpdf</groupId>
+                <artifactId>itext7-core</artifactId>
+                <version>7.2.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 
@@ -148,7 +160,15 @@
 
         <!-- ==================== PDF and Excel Export ==================== -->
 
-        <!-- Apache PDFBox for PDF generation -->
+        <!-- iText 7 for Report PDF generation -->
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>itext7-core</artifactId>
+            <version>7.2.5</version>
+            <type>pom</type>
+        </dependency>
+
+        <!-- Apache PDFBox for PDF generation (kept for existing usage) -->
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
@@ -186,13 +206,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- DevTools — hot reload during development -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
+
 
         <!-- ==================== Testing ==================== -->
 

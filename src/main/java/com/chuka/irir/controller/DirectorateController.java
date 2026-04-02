@@ -1,196 +1,215 @@
 package com.chuka.irir.controller;
 
 import com.chuka.irir.model.ResearchProject;
+import com.chuka.irir.repository.ResearchProjectRepository;
 import com.chuka.irir.service.AnalyticsService;
 import com.chuka.irir.service.ReportExportService;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+/**
+ * Controller for the Directorate of Research & Extension analytics dashboard.
+ *
+ * <p>Provides endpoints for viewing analytics, flagging projects for incubation,
+ * and exporting reports as PDF or Excel. All endpoints require the
+ * {@code ROLE_DIRECTORATE} authority (enforced via SecurityConfig URL rules).</p>
+ */
 @Controller
 @RequestMapping("/directorate")
-@PreAuthorize("hasRole('DIRECTORATE')")
 public class DirectorateController {
+
+    private static final Logger log = LoggerFactory.getLogger(DirectorateController.class);
 
     private final AnalyticsService analyticsService;
     private final ReportExportService reportExportService;
+    private final ResearchProjectRepository researchProjectRepository;
+    private final JavaMailSender javaMailSender;
 
-    public DirectorateController(AnalyticsService analyticsService, ReportExportService reportExportService) {
+    public DirectorateController(AnalyticsService analyticsService,
+                                 ReportExportService reportExportService,
+                                 ResearchProjectRepository researchProjectRepository,
+                                 JavaMailSender javaMailSender) {
         this.analyticsService = analyticsService;
         this.reportExportService = reportExportService;
+        this.researchProjectRepository = researchProjectRepository;
+        this.javaMailSender = javaMailSender;
     }
 
+    // ==================== Dashboard ====================
+
     /**
-     * Loads all analytics data and passes to template.
+     * Loads all analytics data and passes it to the Thymeleaf dashboard template.
+     *
+     * <p>Chart.js data is passed as Lists so Thymeleaf's {@code th:inline="javascript"}
+     * can serialize them directly to JSON arrays. Model attribute names MUST match
+     * the variable names referenced in the template's inlined script block.</p>
+     *
+     * @param model the Spring MVC model
+     * @return view name for {@code templates/directorate/analytics-dashboard.html}
      */
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
-        // Department data
-        Map<String, Long> departmentData = analyticsService.getResearchByDepartment();
-        model.addAttribute("departmentLabels", departmentData.keySet());
-        model.addAttribute("departmentCounts", departmentData.values());
+        // --- Chart data ---
+        Map<String, Long> deptData   = analyticsService.getResearchByDepartment();
+        Map<Integer, Long> trendsData = analyticsService.getResearchTrends(LocalDate.now().getYear());
+        Map<String, Long> domainData = analyticsService.getTopResearchDomains(5);
 
-        // Trends data (last 12 months)
-        int currentYear = java.time.LocalDate.now().getYear();
-        Map<Integer, Long> trendsData = analyticsService.getResearchTrends(currentYear);
-        model.addAttribute("trendsLabels", trendsData.keySet().stream().map(m -> "Month " + m).collect(java.util.stream.Collectors.toList()));
-        model.addAttribute("trendsCounts", trendsData.values());
+        // Department bar chart
+        model.addAttribute("departmentLabels", new ArrayList<>(deptData.keySet()));
+        model.addAttribute("departmentCounts", new ArrayList<>(deptData.values()));
 
-        // Top domains
-        List<Map.Entry<String, Long>> topDomains = analyticsService.getTopResearchDomains(10);
-        model.addAttribute("domainLabels", topDomains.stream().map(Map.Entry::getKey).collect(java.util.stream.Collectors.toList()));
-        model.addAttribute("domainCounts", topDomains.stream().map(Map.Entry::getValue).collect(java.util.stream.Collectors.toList()));
+        // Monthly trends line chart — month labels are constant
+        model.addAttribute("trendLabels",
+                List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"));
+        model.addAttribute("trendCounts", buildTrendCounts(trendsData));
 
-        // High potential projects
-        List<ResearchProject> highPotential = analyticsService.getHighPotentialProjects();
-        model.addAttribute("highPotentialProjects", highPotential);
+        // Research domains doughnut chart
+        model.addAttribute("domainLabels", new ArrayList<>(domainData.keySet()));
+        model.addAttribute("domainCounts", new ArrayList<>(domainData.values()));
 
-        // Incubation candidates
-        List<ResearchProject> incubationCandidates = analyticsService.getIncubationCandidates();
-        model.addAttribute("incubationCandidates", incubationCandidates);
+        // --- Table data ---
+        model.addAttribute("highPotentialProjects", analyticsService.getHighPotentialProjects());
+        model.addAttribute("incubationProjects", analyticsService.getIncubationCandidates());
 
-        return "analytics-dashboard";
+        // --- Summary statistics for stat cards ---
+        model.addAttribute("summaryStats", analyticsService.getSummaryStats());
+
+        // --- Current year for the trends chart heading ---
+        model.addAttribute("currentYear", LocalDate.now().getYear());
+
+        return "directorate/analytics-dashboard";
     }
 
+    // ==================== Flag for Incubation ====================
+
     /**
-     * Flags project for incubation and notifies student.
+     * Flags a research project for incubation and sends an email notification
+     * to the project's student owner.
+     *
+     * @param id                  the project's primary key
+     * @param redirectAttributes  flash attribute container for success/error messages
+     * @return redirect to the dashboard
      */
     @PostMapping("/project/{id}/flag-incubation")
-    public String flagIncubation(@PathVariable Long id) {
-        // TODO: Implement flagging logic and notification
-        // For now, just redirect back
+    public String flagIncubation(@PathVariable Long id,
+                                 RedirectAttributes redirectAttributes) {
+        ResearchProject project = researchProjectRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Project not found with ID: " + id));
+
+        project.setIsIncubationFlagged(true);
+        researchProjectRepository.save(project);
+
+        // Send email notification to the student
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(project.getOwner().getEmail());
+            helper.setSubject("🎉 Your project has been flagged for incubation!");
+            helper.setText(
+                    "Hello " + project.getOwner().getFullName() + ",\n\n"
+                  + "Great news! Your project '" + project.getTitle()
+                  + "' has been flagged for incubation by the Directorate "
+                  + "of Research & Extension.\n\n"
+                  + "This means your work has been identified as having high "
+                  + "innovation potential. You will be contacted with next "
+                  + "steps soon.\n\n"
+                  + "Best regards,\nIRIR — Chuka University",
+                    false);
+            javaMailSender.send(message);
+        } catch (MessagingException ex) {
+            log.warn("Failed to send incubation notification for project {}: {}",
+                    id, ex.getMessage());
+        }
+
+        redirectAttributes.addFlashAttribute("successMessage",
+                "Project \"" + project.getTitle() + "\" flagged for incubation successfully.");
         return "redirect:/directorate/dashboard";
     }
 
+    // ==================== PDF Export ====================
+
     /**
-     * Generates and downloads analytics report as PDF.
+     * Generates and downloads a formatted PDF analytics report.
+     * The report contains department distribution, monthly trends,
+     * top research domains, and high-potential project listings.
+     *
+     * @return PDF file as a downloadable response
+     * @throws IOException if PDF generation fails
      */
     @GetMapping("/export/pdf")
     public ResponseEntity<byte[]> exportPdf() throws IOException {
-        // Create analytics data object
-        AnalyticsData data = new AnalyticsData(
-            analyticsService.getResearchByDepartment(),
-            analyticsService.getResearchTrends(java.time.LocalDate.now().getYear()),
-            analyticsService.getTopResearchDomains(10),
-            analyticsService.getHighPotentialProjects(),
-            analyticsService.getIncubationCandidates()
-        );
+        // Build complete analytics data map for the PDF report
+        Map<String, Object> analyticsData = new HashMap<>();
+        analyticsData.put("departmentData", analyticsService.getResearchByDepartment());
+        analyticsData.put("trendsData", analyticsService.getResearchTrends(LocalDate.now().getYear()));
+        analyticsData.put("domainData", analyticsService.getTopResearchDomains(5));
+        analyticsData.put("highPotentialProjects", analyticsService.getHighPotentialProjects());
+        analyticsData.put("summaryStats", analyticsService.getSummaryStats());
 
-        byte[] pdfBytes = reportExportService.exportToPDF(data);
+        byte[] pdfBytes = reportExportService.exportToPDF(analyticsData);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=analytics-report.pdf")
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=irir-analytics-report.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfBytes);
     }
 
+    // ==================== Excel Export ====================
+
     /**
-     * Generates Excel report of all projects with metadata.
+     * Generates and downloads an Excel spreadsheet of all research projects
+     * with full metadata (title, department, keywords, scores, dates, etc.).
+     *
+     * @return XLSX file as a downloadable response
+     * @throws IOException if Excel generation fails
      */
     @GetMapping("/export/excel")
     public ResponseEntity<byte[]> exportExcel() throws IOException {
         List<ResearchProject> allProjects = analyticsService.getAllProjects();
-        // Actually, the task says "all projects with metadata", so perhaps all
-        // But to match, let's use all
-        // Wait, the method is exportToExcel(List<ResearchProject> projects)
-        // So need to get all projects
-        // But for simplicity, use incubation candidates or add a method to get all
-        // Let's assume we get all
-        List<ResearchProject> allProjects = researchProjectRepository.findAll(); // But need to inject repo or use service
-        // Since service has repo, but to keep simple, let's modify service to have getAllProjects or just use repo here
-        // For now, use high potential or something, but better to add to service
-        // Wait, the task says "Generates Excel report of all projects with metadata"
-        // So, need to get all ResearchProject
-        // Let's add a method or just use repo
-        // Since controller can inject repo
-        // But to keep clean, let's add to service
-
-        // For now, I'll assume we have a list
-        // Let's modify to use all projects
-        List<ResearchProject> allProjects = analyticsService.getAllProjects(); // Need to add this method
-
-        // Wait, let's add it to service first
-        // Actually, since I'm creating, let's add
-
-        // For now, in controller, inject repo
-        // But to avoid, let's add to service
-
-        // I'll add getAllProjects to service
-        // But since I can't edit now, let's use the existing
-
-        // The task says "exportToExcel(List<ResearchProject> projects)"
-        // So, I can pass all projects
-        // Let's add a method to service
-
-        // Since I can edit, let's add
-
-        // Wait, in the create, I can add
-
-        // Let's edit the service to add getAllProjects
-
-        // But for now, in controller, I'll use analyticsService to get lists, but for excel, need all
-
-        // Let's add to service
-
-        // I'll edit the service
-
-        // Wait, no, since I created it, I can replace
-
-        // Let's add the method
-
-        // In the service, add public List<ResearchProject> getAllProjects() { return researchProjectRepository.findAll(); }
-
-        // Yes
-
-        // But since I can't edit now, let's do it
-
-        // Actually, I can use replace_string_in_file
-
-        // But for now, in controller, I'll use a list
-
-        // To make it work, let's assume we have all projects
-
-        // Let's add the method to service
-
-        // I'll use replace_string_in_file to add the method
-
-        // First, let's do the controller with placeholder
-
-        // Then edit service
-
-        // For now, let's write the controller
-
         byte[] excelBytes = reportExportService.exportToExcel(allProjects);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=projects-report.xlsx")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=irir-research-projects.xlsx")
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(excelBytes);
     }
 
-    // Inner class for analytics data
-    public static class AnalyticsData {
-        public Map<String, Long> departmentData;
-        public Map<Integer, Long> trendsData;
-        public List<Map.Entry<String, Long>> topDomains;
-        public List<ResearchProject> highPotential;
-        public List<ResearchProject> incubationCandidates;
+    // ==================== Helper Methods ====================
 
-        public AnalyticsData(Map<String, Long> departmentData, Map<Integer, Long> trendsData, List<Map.Entry<String, Long>> topDomains, List<ResearchProject> highPotential, List<ResearchProject> incubationCandidates) {
-            this.departmentData = departmentData;
-            this.trendsData = trendsData;
-            this.topDomains = topDomains;
-            this.highPotential = highPotential;
-            this.incubationCandidates = incubationCandidates;
+    /**
+     * Converts the month→count map into an ordered List of 12 values
+     * suitable for direct serialization into a Chart.js data array.
+     */
+    private List<Long> buildTrendCounts(Map<Integer, Long> trends) {
+        List<Long> counts = new ArrayList<>();
+        for (int month = 1; month <= 12; month++) {
+            counts.add(trends.getOrDefault(month, 0L));
         }
+        return counts;
     }
 }

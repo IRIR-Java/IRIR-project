@@ -8,13 +8,17 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "research_projects")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = {"owner", "similarityReports", "supervisorFeedbacks"})
+@SuppressWarnings("unused")
 public class ResearchProject {
 
     @Id
@@ -75,4 +79,30 @@ public class ResearchProject {
     @OneToMany(mappedBy = "researchProject", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<SupervisorFeedback> supervisorFeedbacks = new ArrayList<>();
+
+    // Explicit getters for IDE compatibility
+    public Long getProjectId() { return projectId; }
+    public String getTitle() { return title; }
+    public String getDepartment() { return department; }
+    public String getKeywords() { return keywords; }
+    public Double getSimilarityScore() { return similarityScore; }
+    public Integer getViewCount() { return viewCount; }
+    public Integer getDownloadCount() { return downloadCount; }
+    public Boolean getIsIncubationFlagged() { return isIncubationFlagged; }
+    public LocalDateTime getUploadDate() { return uploadDate; }
+    public User getOwner() { return owner; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ResearchProject that = (ResearchProject) o;
+        return projectId != null && Objects.equals(projectId, that.projectId);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
+

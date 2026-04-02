@@ -9,13 +9,16 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = {"researchProjects"})
 public class User {
 
     @Id
@@ -24,6 +27,10 @@ public class User {
 
     @Column(nullable = false, length = 100)
     private String fullName;
+
+    public String getFullName() {
+        return fullName;
+    }
 
     @Column(unique = true, length = 50)
     private String regNumber;
@@ -68,9 +75,23 @@ public class User {
     // Spring Security fields kept for compatibility with existing services where possible
     @Column(nullable = false)
     @Builder.Default
-    private boolean enabled = true;
+    private Boolean enabled = true;
 
     @Column(name = "account_non_locked", nullable = false)
     @Builder.Default
-    private boolean accountNonLocked = true;
+    private Boolean accountNonLocked = true;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return userId != null && Objects.equals(userId, user.userId);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
+

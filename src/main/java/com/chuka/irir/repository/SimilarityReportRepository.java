@@ -20,6 +20,4 @@ public interface SimilarityReportRepository extends JpaRepository<SimilarityRepo
 
     List<SimilarityReport> findAllByOrderByGeneratedAtDesc();
 
-    /** Count flagged reports. Used for dashboard metrics. */
-    long countByFlaggedTrue();
 }

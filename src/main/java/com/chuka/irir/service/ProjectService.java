@@ -94,7 +94,7 @@ public class ProjectService {
     public Project getProjectForStudent(Long projectId, User student) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
-        if (!project.getSubmittedBy().getId().equals(student.getId())) {
+        if (!project.getSubmittedBy().getUserId().equals(student.getUserId())) {
             throw new ResourceNotFoundException("Project", "id", projectId);
         }
         // Initialize lazy collections before leaving the transaction
