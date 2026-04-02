@@ -11,6 +11,14 @@
             th:text="${errorMessage != null ? errorMessage : 'An unexpected error occurred. Please try again later.'}">
             An unexpected error occurred.
         </p>
+
+        <!-- Temporary debug info — remove after diagnosing -->
+        <div th:if="${debugErrorType}" class="mt-4 text-start" style="max-width:600px; margin:auto; background:rgba(255,255,255,0.05); padding:1rem; border-radius:8px; font-size:0.85rem;">
+            <p><strong>Exception:</strong> <code th:text="${debugErrorType}">-</code></p>
+            <p><strong>Message:</strong> <code th:text="${debugErrorDetail}">-</code></p>
+            <p><strong>Root Cause:</strong> <code th:text="${debugRootCause}">-</code></p>
+        </div>
+
         <a th:href="@{/dashboard}" class="btn btn-primary btn-lg mt-3">
             <i class="bi bi-house me-2"></i> Back to Dashboard
         </a>

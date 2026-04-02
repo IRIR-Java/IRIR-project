@@ -62,6 +62,12 @@ public class GlobalExceptionHandler {
     public String handleGenericException(Exception ex, Model model) {
         logger.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         model.addAttribute("errorMessage", "An unexpected error occurred. Please try again later.");
+        // Debug info — remove after diagnosing production issue
+        model.addAttribute("debugErrorType", ex.getClass().getName());
+        model.addAttribute("debugErrorDetail", ex.getMessage());
+        Throwable root = ex;
+        while (root.getCause() != null) root = root.getCause();
+        model.addAttribute("debugRootCause", root.getClass().getName() + ": " + root.getMessage());
         return "error/500";
     }
 }
