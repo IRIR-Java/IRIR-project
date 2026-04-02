@@ -102,7 +102,7 @@ public class FileStorageService {
 
     private String extractTextSafely(Path filePath) {
         try {
-            String text = tika.parseToString(filePath.toFile());
+            String text = tika.parseToString(filePath);
             if (text == null) {
                 return "";
             }
