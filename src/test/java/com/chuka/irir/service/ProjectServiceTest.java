@@ -37,6 +37,12 @@ class ProjectServiceTest {
     @Mock
     private SimilarityDetectionService similarityDetectionService;
 
+    @Mock
+    private NotificationService notificationService;
+
+    @Mock
+    private KeywordExtractionService keywordExtractionService;
+
     @InjectMocks
     private ProjectService projectService;
 
@@ -49,7 +55,7 @@ class ProjectServiceTest {
                 .firstName("Test")
                 .lastName("Student")
                 .studentId("CS/001/2026")
-                .roles(Set.of(Role.STUDENT))
+                .role(Role.STUDENT)
                 .build();
 
         MockMultipartFile proposal = new MockMultipartFile(

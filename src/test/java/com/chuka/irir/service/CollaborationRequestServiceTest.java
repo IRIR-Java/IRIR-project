@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
 
 import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
@@ -43,7 +42,7 @@ class CollaborationRequestServiceTest {
                 .password("encoded")
                 .firstName("Sender")
                 .lastName("User")
-                .roles(Set.of(Role.STUDENT))
+                .role(Role.STUDENT)
                 .build();
 
         User receiver = User.builder()
@@ -52,11 +51,11 @@ class CollaborationRequestServiceTest {
                 .password("encoded")
                 .firstName("Receiver")
                 .lastName("User")
-                .roles(Set.of(Role.STUDENT))
+                .role(Role.STUDENT)
                 .build();
 
         CollaborationRequest request = CollaborationRequest.builder()
-                .id(30L)
+                .requestId(30L)
                 .sender(sender)
                 .receiver(receiver)
                 .status(CollaborationStatus.PENDING)

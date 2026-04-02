@@ -60,7 +60,7 @@ class CollaboratorRecommendationServiceTest {
                 .lastName("Researcher")
                 .studentId("CS/101/2026")
                 .researchInterests("natural language processing academic writing")
-                .roles(Set.of(Role.STUDENT))
+                .role(Role.STUDENT)
                 .build();
 
         User recommendedStudent = User.builder()
@@ -72,7 +72,7 @@ class CollaboratorRecommendationServiceTest {
                 .studentId("CS/102/2026")
                 .department("Computer Science")
                 .researchInterests("citation analysis and information retrieval")
-                .roles(Set.of(Role.STUDENT))
+                .role(Role.STUDENT)
                 .build();
 
         Project uploadedProject = Project.builder()
