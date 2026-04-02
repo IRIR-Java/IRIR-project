@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRIR System Admin - Users</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<!-- Navbar Placeholder -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/admin/dashboard">IRIR Admin Panel</a>
+        <div class="d-flex">
+            <span class="navbar-text text-white me-3">Welcome, Admin</span>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2 class="mb-4">User Management</h2>
+
+    <!-- Search and Filter Panel -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form action="/admin/users" method="get" class="row gx-3 gy-2 align-items-center">
+                <div class="col-sm-5">
+                    <label class="visually-hidden" for="searchInput">Search</label>
+                    <div class="input-group">
+                        <div class="input-group-text"><i class="bi bi-search"></i></div>
+                        <input type="text" class="form-control" id="searchInput" name="search" placeholder="Search by name or email..." th:value="${param.search}">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <label class="visually-hidden" for="roleFilter">Role</label>
+                    <select class="form-select" id="roleFilter" name="role">
+                        <option value="" th:selected="${param.role == null}">All Roles</option>
+                        <option value="STUDENT" th:selected="${param.role == 'STUDENT'}">Student</option>
+                        <option value="SUPERVISOR" th:selected="${param.role == 'SUPERVISOR'}">Supervisor</option>
+                        <option value="DIRECTORATE" th:selected="${param.role == 'DIRECTORATE'}">Directorate</option>
+                        <option value="ADMIN" th:selected="${param.role == 'ADMIN'}">Admin</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                    <a href="/admin/users" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        Success: Action completed successfully.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Users Data Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 text-center align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Mock Data Example. In real app, loop using th:each="user : ${userPage.content}" -->
+                    <tr>
+                        <td>1</td>
+                        <td>John Doe</td>
+                        <td>john@example.com</td>
+                        <td><span class="badge bg-info text-dark">STUDENT</span></td>
+                        <td><span class="badge bg-success">ACTIVE</span></td>
+                        <td>
+                            <!-- Change Role Form -->
+                            <form action="/admin/users/1/change-role" method="post" class="d-inline-block me-1">
+                                <select name="newRole" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+                                    <option value="" disabled selected>Change Role</option>
+                                    <option value="SUPERVISOR">Supervisor</option>
+                                    <option value="DIRECTORATE">Directorate</option>
+                                    <option value="ADMIN">Admin</option>
+                                </select>
+                            </form>
+                            
+                            <!-- Suspend Form -->
+                            <form action="/admin/users/1/suspend" method="post" class="d-inline-block me-1">
+                                <button type="submit" class="btn btn-sm btn-warning" title="Suspend"><i class="bi bi-pause-circle"></i></button>
+                            </form>
+
+                            <!-- Delete Form / Button -->
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal1" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+
+                            <!-- Delete Confirmation Modal -->
+                            <div class="modal fade" id="deleteModal1" tabindex="-1" aria-labelledby="deleteModalLabel1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel1">Confirm Deletion</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-start">
+                                            Are you sure you want to soft-delete <strong>John Doe</strong>? Their projects will be retained.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="/admin/users/1/delete" method="post">
+                                                <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>2</td>
+                        <td>Jane Smith</td>
+                        <td>jane@example.com</td>
+                        <td><span class="badge bg-secondary">SUPERVISOR</span></td>
+                        <td><span class="badge bg-danger">SUSPENDED</span></td>
+                        <td>
+                            <!-- Change Role Form -->
+                            <form action="/admin/users/2/change-role" method="post" class="d-inline-block me-1">
+                                <select name="newRole" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+                                    <option value="" disabled selected>Change Role</option>
+                                    <option value="STUDENT">Student</option>
+                                    <option value="DIRECTORATE">Directorate</option>
+                                </select>
+                            </form>
+                            
+                            <!-- Suspend Form (Disabled if already suspended) -->
+                            <button type="button" class="btn btn-sm btn-warning" title="Suspend" disabled><i class="bi bi-pause-circle"></i></button>
+
+                            <!-- Delete Button -->
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal2" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+
+                            <!-- Delete Confirmation Modal -->
+                            <div class="modal fade" id="deleteModal2" tabindex="-1" aria-labelledby="deleteModalLabel2" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel2">Confirm Deletion</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-start">
+                                            Are you sure you want to soft-delete <strong>Jane Smith</strong>?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="/admin/users/2/delete" method="post">
+                                                <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination Controls (Static Placeholder) -->
+            <div class="d-flex justify-content-between align-items-center mt-3 p-3">
+                <span class="text-muted">Showing 1 to 2 of 2 users</span>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap 5 JS Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
