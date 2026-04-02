@@ -22,8 +22,12 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# Create directory for uploaded files
-RUN mkdir -p /app/uploads /app/lucene-index
+# Create directory for persistent data (Railway Volume mount point)
+RUN mkdir -p /data/uploads /data/lucene-index
+
+# Default to persistent volume paths (overridden by Railway env vars if needed)
+ENV UPLOAD_DIR=/data/uploads
+ENV LUCENE_INDEX_DIR=/data/lucene-index
 
 COPY --from=build /app/target/*.jar app.jar
 
