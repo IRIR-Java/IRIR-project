@@ -66,7 +66,6 @@
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
 
-
         <!-- Bean Validation (Jakarta Validation annotations) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -163,12 +162,7 @@
 
         <!-- ==================== PDF and Excel Export ==================== -->
 
-        <!-- Apache PDFBox for PDF generation -->
-        <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox</artifactId>
-            <version>3.0.1</version>
-        </dependency>
+        <!-- PDFBox is provided transitively by Tika 3.x — do NOT add an explicit version -->
 
         <!-- Apache POI for Excel generation -->
         <dependency>
