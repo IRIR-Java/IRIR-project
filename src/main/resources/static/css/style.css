@@ -731,3 +731,183 @@ a:hover {
     background: hsla(var(--primary-hue), 72%, 50%, 0.3);
     color: var(--text-primary);
 }
+
+/* ==================== Admin Dashboard & Enhanced Components ==================== */
+
+/* Hover lift effect for cards */
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Tab styling improvements */
+.nav-tabs {
+    border-bottom-color: var(--border-color);
+}
+.nav-tabs .nav-link {
+    color: var(--text-secondary);
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.75rem 1.25rem;
+    transition: all var(--transition-fast);
+}
+.nav-tabs .nav-link:hover {
+    color: var(--text-primary);
+    border-bottom-color: var(--primary-light);
+}
+.nav-tabs .nav-link.active {
+    color: var(--primary-light);
+    background: transparent;
+    border-bottom-color: var(--primary);
+}
+
+/* Progress bar improvements */
+.progress {
+    background-color: var(--bg-surface-overlay);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* Range input styling */
+.form-range::-webkit-slider-thumb {
+    background: var(--primary);
+}
+.form-range::-webkit-slider-runnable-track {
+    background: var(--bg-surface-overlay);
+}
+
+/* Badge improvements */
+.badge.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+/* Breadcrumb dark theme */
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+}
+.breadcrumb-item a {
+    color: var(--primary-light);
+}
+.breadcrumb-item.active {
+    color: var(--text-muted);
+}
+.breadcrumb-item + .breadcrumb-item::before {
+    color: var(--text-muted);
+}
+
+/* Score display */
+.score-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border: 3px solid var(--primary);
+    margin: 0 auto;
+}
+
+/* Animate entrance */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+    animation: fadeInUp 0.4s ease forwards;
+}
+
+/* Table improvements */
+.table-dark {
+    --bs-table-bg: transparent;
+}
+.table-dark thead th {
+    background-color: var(--bg-surface);
+    border-bottom-color: var(--border-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    padding: 1rem;
+}
+.table-dark tbody td {
+    border-bottom-color: var(--border-color);
+    padding: 0.875rem 1rem;
+    vertical-align: middle;
+}
+.table-hover > tbody > tr:hover > * {
+    background-color: hsla(var(--primary-hue), 40%, 50%, 0.05);
+}
+
+/* Card improvements */
+.card {
+    border-radius: var(--radius-md);
+    transition: box-shadow var(--transition-normal);
+}
+.card-header {
+    background-color: var(--bg-surface);
+    border-bottom-color: var(--border-color);
+    padding: 1rem 1.25rem;
+}
+
+/* Dropdown dark styling */
+.dropdown-menu-dark {
+    background: var(--bg-surface);
+    border-color: var(--border-color);
+}
+.dropdown-menu-dark .dropdown-item {
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+.dropdown-menu-dark .dropdown-item:hover {
+    background: var(--bg-surface-overlay);
+    color: var(--text-primary);
+}
+
+/* Form range dark theme */
+input[type="range"] {
+    accent-color: var(--primary);
+}
+
+/* Alert improvements */
+.alert {
+    border-radius: var(--radius-md);
+    border: none;
+    border-left: 4px solid;
+}
+.alert-success { border-left-color: var(--success); background: hsla(145, 63%, 42%, 0.1); }
+.alert-danger { border-left-color: var(--danger); background: hsla(0, 72%, 51%, 0.1); }
+.alert-warning { border-left-color: var(--warning); background: hsla(38, 92%, 50%, 0.1); }
+.alert-info { border-left-color: var(--info); background: hsla(199, 89%, 48%, 0.1); }
+
+/* List group dark */
+.list-group-item-action.bg-transparent:hover {
+    background-color: var(--bg-surface-overlay) !important;
+}
+
+/* Glassmorphism utility */
+.glass {
+    background: hsla(222, 20%, 14%, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+}
+
+/* Responsive padding for main content */
+@media (max-width: 768px) {
+    main.container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    .display-2 { font-size: 2.5rem; }
+    .display-4 { font-size: 1.75rem; }
+}

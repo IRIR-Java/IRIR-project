@@ -1,116 +1,207 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<!--
-  ============================================================================
-  IRIR — Admin Dashboard
-  System-wide user management, statistics, and system monitoring.
-  ============================================================================
--->
-
+<html data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head('Admin Dashboard')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
 
-<body>
-    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container mt-5 pt-4 flex-grow-1">
+    <!-- Welcome Header -->
+    <div class="mb-4">
+        <h2 class="mb-1"><i class="bi bi-shield-lock me-2"></i>Admin Command Center</h2>
+        <p class="text-muted">System overview, project management, and analytics</p>
+    </div>
 
-    <main class="dashboard-main">
-        <div class="container">
-            <!-- Welcome Header -->
-            <div class="dashboard-header">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h1 class="dashboard-title">
-                            <i class="bi bi-gear me-2"></i>
-                            System Administration
-                        </h1>
-                        <p class="dashboard-subtitle">
-                            Manage users, roles, system logs, and backups
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- System Stats -->
-            <div class="row g-4 mb-4">
-                <div class="col-md-3">
-                    <div class="stat-card stat-card-primary">
-                        <div class="stat-icon"><i class="bi bi-people"></i></div>
-                        <div class="stat-info">
-                            <h3 class="stat-value" th:text="${totalUsers}">0</h3>
-                            <p class="stat-label">Total Users</p>
+    <!-- Key Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card bg-dark border-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Total Users</p>
+                            <h3 class="mb-0 text-primary" th:text="${totalUsers}">0</h3>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card stat-card-info">
-                        <div class="stat-icon"><i class="bi bi-mortarboard"></i></div>
-                        <div class="stat-info">
-                            <h3 class="stat-value" th:text="${studentCount}">0</h3>
-                            <p class="stat-label">Students</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card stat-card-success">
-                        <div class="stat-icon"><i class="bi bi-person-workspace"></i></div>
-                        <div class="stat-info">
-                            <h3 class="stat-value" th:text="${supervisorCount}">0</h3>
-                            <p class="stat-label">Supervisors</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card stat-card-warning">
-                        <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
-                        <div class="stat-info">
-                            <h3 class="stat-value" th:text="${totalProjects}">0</h3>
-                            <p class="stat-label">Total Projects</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin Quick Actions -->
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="content-card">
-                        <div class="content-card-header">
-                            <h2><i class="bi bi-people me-2"></i>User Management</h2>
-                        </div>
-                        <div class="content-card-body">
-                            <div class="d-grid gap-2">
-                                <a th:href="@{/admin/users}" class="btn btn-outline-primary btn-lg">
-                                    <i class="bi bi-people me-2"></i> Manage Users
-                                </a>
-                                <a th:href="@{/admin/users/create}" class="btn btn-outline-success btn-lg">
-                                    <i class="bi bi-person-plus me-2"></i> Create User
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="content-card">
-                        <div class="content-card-header">
-                            <h2><i class="bi bi-tools me-2"></i>System Tools</h2>
-                        </div>
-                        <div class="content-card-body">
-                            <div class="d-grid gap-2">
-                                <a th:href="@{/admin/logs}" class="btn btn-outline-info btn-lg">
-                                    <i class="bi bi-journal-text me-2"></i> View Audit Logs
-                                </a>
-                                <a th:href="@{/admin/backup}" class="btn btn-outline-warning btn-lg">
-                                    <i class="bi bi-hdd me-2"></i> Database Backup
-                                </a>
-                            </div>
-                        </div>
+                        <i class="bi bi-people fs-2 text-primary opacity-50"></i>
                     </div>
                 </div>
             </div>
         </div>
-    </main>
+        <div class="col-6 col-lg-3">
+            <div class="card bg-dark border-info h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Total Projects</p>
+                            <h3 class="mb-0 text-info" th:text="${totalProjects}">0</h3>
+                        </div>
+                        <i class="bi bi-folder2-open fs-2 text-info opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card bg-dark border-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Pending Review</p>
+                            <h3 class="mb-0 text-warning" th:text="${pendingReview}">0</h3>
+                        </div>
+                        <i class="bi bi-hourglass-split fs-2 text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card bg-dark border-danger h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Flagged</p>
+                            <h3 class="mb-0 text-danger" th:text="${flagged}">0</h3>
+                        </div>
+                        <i class="bi bi-flag fs-2 text-danger opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <footer th:replace="~{fragments/layout :: footer}"></footer>
-    <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+    <!-- Secondary Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body text-center">
+                    <h4 class="text-success mb-0" th:text="${approved}">0</h4>
+                    <small class="text-muted">Approved</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body text-center">
+                    <h4 class="text-danger mb-0" th:text="${rejected}">0</h4>
+                    <small class="text-muted">Rejected</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body text-center">
+                    <h4 class="text-info mb-0" th:text="${projectsThisMonth}">0</h4>
+                    <small class="text-muted">This Month</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Grid -->
+    <h5 class="mb-3">Quick Actions</h5>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-lg-3">
+            <a th:href="@{/admin/projects}" class="card bg-dark border-secondary text-decoration-none h-100 hover-lift">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-folder2-open fs-2 text-info d-block mb-2"></i>
+                    <strong>All Projects</strong>
+                    <p class="text-muted small mb-0">Review, score & manage</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <a th:href="@{/admin/projects?status=SUBMITTED}" class="card bg-dark border-secondary text-decoration-none h-100 hover-lift">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-clipboard-check fs-2 text-warning d-block mb-2"></i>
+                    <strong>Pending Reviews</strong>
+                    <p class="text-muted small mb-0">Projects awaiting review</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <a th:href="@{/admin/analytics}" class="card bg-dark border-secondary text-decoration-none h-100 hover-lift">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-graph-up fs-2 text-success d-block mb-2"></i>
+                    <strong>Analytics</strong>
+                    <p class="text-muted small mb-0">Charts & insights</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <a th:href="@{/admin/users}" class="card bg-dark border-secondary text-decoration-none h-100 hover-lift">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-people fs-2 text-primary d-block mb-2"></i>
+                    <strong>Users</strong>
+                    <p class="text-muted small mb-0">Manage accounts</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <a th:href="@{/admin/users/create}" class="card bg-dark border-secondary text-decoration-none h-100 hover-lift">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-person-plus fs-2 text-success d-block mb-2"></i>
+                    <strong>Create User</strong>
+                    <p class="text-muted small mb-0">Add new account</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <a th:href="@{/admin/logs}" class="card bg-dark border-secondary text-decoration-none h-100 hover-lift">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-journal-text fs-2 text-warning d-block mb-2"></i>
+                    <strong>Audit Logs</strong>
+                    <p class="text-muted small mb-0">System activity</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <a th:href="@{/admin/backup}" class="card bg-dark border-secondary text-decoration-none h-100 hover-lift">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-database fs-2 text-danger d-block mb-2"></i>
+                    <strong>Backup</strong>
+                    <p class="text-muted small mb-0">Data protection</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <a th:href="@{/admin/settings}" class="card bg-dark border-secondary text-decoration-none h-100 hover-lift">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-gear fs-2 text-secondary d-block mb-2"></i>
+                    <strong>Settings</strong>
+                    <p class="text-muted small mb-0">System configuration</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Distribution Chart -->
+    <div class="card bg-dark border-secondary mb-4" th:if="${statusCounts != null}">
+        <div class="card-header"><h6 class="mb-0">Project Status Distribution</h6></div>
+        <div class="card-body">
+            <div th:each="entry : ${statusCounts}" class="mb-2">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="small" th:text="${entry.key}"></span>
+                    <span class="small fw-bold" th:text="${entry.value}"></span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar"
+                         th:classappend="${entry.key == 'APPROVED'} ? 'bg-success' :
+                                         (${entry.key == 'REJECTED'} ? 'bg-danger' :
+                                         (${entry.key == 'SUBMITTED'} ? 'bg-info' :
+                                         (${entry.key == 'FLAGGED'} ? 'bg-warning' : 'bg-secondary')))"
+                         th:style="${'width: ' + (totalProjects > 0 ? (entry.value * 100 / totalProjects) : 0) + '%'}"
+                         role="progressbar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+<style>
+    .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+</style>
 </body>
-
 </html>

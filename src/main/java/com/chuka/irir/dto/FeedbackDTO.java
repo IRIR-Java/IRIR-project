@@ -1,5 +1,6 @@
-package com.chuka.irir.service;
+package com.chuka.irir.dto;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class FeedbackDTO {
@@ -10,6 +11,7 @@ public class FeedbackDTO {
         FORWARDED_TO_INCUBATION
     }
 
+    @NotNull(message = "Feedback action is required")
     private FeedbackAction action;
 
     @Size(max = 2000, message = "Comment cannot exceed 2000 characters")

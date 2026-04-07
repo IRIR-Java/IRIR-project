@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Project Detail')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container mt-5 pt-4 flex-grow-1">
+
+    <!-- Flash Messages -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i><span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/admin/dashboard}">Admin</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/admin/projects}">Projects</a></li>
+            <li class="breadcrumb-item active" th:text="${#strings.abbreviate(project.title, 40)}">Project</li>
+        </ol>
+    </nav>
+
+    <!-- Project Header -->
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h3 class="mb-2" th:text="${project.title}">Project Title</h3>
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        <span class="badge fs-6"
+                              th:classappend="${project.status.name() == 'APPROVED'} ? 'bg-success' :
+                                              (${project.status.name() == 'REJECTED'} ? 'bg-danger' :
+                                              (${project.status.name() == 'FLAGGED'} ? 'bg-warning text-dark' :
+                                              (${project.status.name() == 'SUBMITTED'} ? 'bg-info' : 'bg-secondary')))"
+                              th:text="${project.status.name()}">STATUS</span>
+                        <span class="text-muted" th:if="${project.submittedBy != null}">
+                            <i class="bi bi-person me-1"></i>
+                            <span th:text="${project.submittedBy.firstName + ' ' + project.submittedBy.lastName}"></span>
+                        </span>
+                        <span class="text-muted" th:if="${project.submittedAt != null}">
+                            <i class="bi bi-calendar me-1"></i>
+                            <span th:text="${#temporals.format(project.submittedAt, 'MMM dd, yyyy')}"></span>
+                        </span>
+                        <span class="text-muted" th:if="${avgScore != null}">
+                            <i class="bi bi-star me-1"></i> Avg Score: <strong th:text="${#numbers.formatDecimal(avgScore, 1, 1)}"></strong>/100
+                        </span>
+                        <span class="text-muted" th:if="${maxSimilarity != null}">
+                            <i class="bi bi-copy me-1"></i> Max Similarity: <strong th:text="${#numbers.formatDecimal(maxSimilarity * 100, 1, 1) + '%'}"></strong>
+                        </span>
+                    </div>
+                </div>
+                <!-- Quick Actions -->
+                <div class="d-flex gap-2 flex-wrap">
+                    <form th:action="@{/admin/projects/{id}/ai-review(id=${project.id})}" method="post">
+                        <button type="submit" class="btn btn-warning btn-sm">
+                            <i class="bi bi-robot me-1"></i> AI Analysis
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#overview">Overview</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#files">Files</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#similarity">Similarity</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reviews">Reviews</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ai-analysis">AI Analysis</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#scoring">Scoring</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview">
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card bg-dark border-secondary mb-3">
+                        <div class="card-header"><h6 class="mb-0">Abstract</h6></div>
+                        <div class="card-body">
+                            <p th:text="${project.abstractText}" th:if="${project.abstractText != null}">No abstract provided.</p>
+                            <p class="text-muted" th:if="${project.abstractText == null}">No abstract provided.</p>
+                        </div>
+                    </div>
+                    <div class="card bg-dark border-secondary">
+                        <div class="card-header"><h6 class="mb-0">Keywords</h6></div>
+                        <div class="card-body">
+                            <span th:each="kw : ${project.keywords}" class="badge bg-primary me-1 mb-1" th:text="${kw}"></span>
+                            <span th:if="${project.keywords == null || project.keywords.isEmpty()}" class="text-muted">No keywords</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card bg-dark border-secondary mb-3">
+                        <div class="card-header"><h6 class="mb-0">Details</h6></div>
+                        <div class="card-body">
+                            <dl class="mb-0">
+                                <dt class="text-muted small">Student</dt>
+                                <dd th:if="${project.submittedBy != null}" th:text="${project.submittedBy.firstName + ' ' + project.submittedBy.lastName}"></dd>
+                                <dt class="text-muted small">Email</dt>
+                                <dd th:if="${project.submittedBy != null}" th:text="${project.submittedBy.email}"></dd>
+                                <dt class="text-muted small">Supervisor</dt>
+                                <dd th:if="${project.supervisor != null}" th:text="${project.supervisor.firstName + ' ' + project.supervisor.lastName}"></dd>
+                                <dd th:if="${project.supervisor == null}" class="text-muted">Not assigned</dd>
+                                <dt class="text-muted small">Academic Year</dt>
+                                <dd th:text="${project.academicYear != null ? project.academicYear : 'N/A'}"></dd>
+                                <dt class="text-muted small">Views / Downloads</dt>
+                                <dd th:text="${(project.viewCount != null ? project.viewCount : 0) + ' / ' + (project.downloadCount != null ? project.downloadCount : 0)}"></dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <!-- Status Change -->
+                    <div class="card bg-dark border-secondary">
+                        <div class="card-header"><h6 class="mb-0">Change Status</h6></div>
+                        <div class="card-body">
+                            <form th:action="@{/admin/projects/{id}/status(id=${project.id})}" method="post">
+                                <select name="status" class="form-select mb-2">
+                                    <option th:each="s : ${statusOptions}" th:value="${s.name()}" th:text="${s.name()}"
+                                            th:selected="${s == project.status}"></option>
+                                </select>
+                                <textarea name="reason" class="form-control mb-2" rows="2" placeholder="Reason (optional)"></textarea>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-arrow-repeat me-1"></i> Update Status
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files Tab -->
+        <div class="tab-pane fade" id="files">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body">
+                    <div th:if="${project.files != null && !project.files.isEmpty()}">
+                        <div th:each="file : ${project.files}" class="d-flex align-items-center justify-content-between border-bottom border-secondary py-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi fs-3"
+                                   th:classappend="${file.fileType != null && file.fileType.contains('pdf')} ? 'bi-file-earmark-pdf text-danger' :
+                                                   (${file.fileType != null && file.fileType.contains('word')} ? 'bi-file-earmark-word text-primary' : 'bi-file-earmark-zip text-warning')"></i>
+                                <div>
+                                    <strong th:text="${file.fileName}">filename.pdf</strong>
+                                    <br><small class="text-muted" th:text="${file.fileType}">application/pdf</small>
+                                </div>
+                            </div>
+                            <a th:href="@{/student/projects/{pid}/files/{fid}(pid=${project.id}, fid=${file.id})}"
+                               class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-download me-1"></i> Download
+                            </a>
+                        </div>
+                    </div>
+                    <p th:if="${project.files == null || project.files.isEmpty()}" class="text-muted text-center py-4">
+                        <i class="bi bi-inbox fs-1 d-block mb-2"></i> No files uploaded.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Similarity Tab -->
+        <div class="tab-pane fade" id="similarity">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body">
+                    <div th:if="${similarityReports != null && !similarityReports.isEmpty()}">
+                        <div th:each="report : ${similarityReports}" class="border-bottom border-secondary py-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong th:if="${report.targetProject != null}" th:text="${report.targetProject.title}">Matched Project</strong>
+                                <span class="badge"
+                                      th:classappend="${report.similarityScore != null && report.similarityScore >= 0.70} ? 'bg-danger' :
+                                                      (${report.similarityScore != null && report.similarityScore >= 0.40} ? 'bg-warning text-dark' : 'bg-success')"
+                                      th:text="${report.similarityScore != null ? #numbers.formatDecimal(report.similarityScore * 100, 1, 1) + '%' : 'N/A'}">0%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar"
+                                     th:classappend="${report.similarityScore != null && report.similarityScore >= 0.70} ? 'bg-danger' :
+                                                     (${report.similarityScore != null && report.similarityScore >= 0.40} ? 'bg-warning' : 'bg-success')"
+                                     th:style="${'width: ' + (report.similarityScore != null ? report.similarityScore * 100 : 0) + '%'}"
+                                     role="progressbar"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p th:if="${similarityReports == null || similarityReports.isEmpty()}" class="text-muted text-center py-4">
+                        <i class="bi bi-shield-check fs-1 d-block mb-2"></i> No similarity reports available.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews Tab -->
+        <div class="tab-pane fade" id="reviews">
+            <div class="card bg-dark border-secondary mb-3">
+                <div class="card-body">
+                    <div th:if="${reviews != null && !reviews.isEmpty()}">
+                        <div th:each="review : ${reviews}" class="border-bottom border-secondary py-3">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <span class="badge me-2"
+                                          th:classappend="${review.decision.name() == 'APPROVED'} ? 'bg-success' :
+                                                          (${review.decision.name() == 'REJECTED'} ? 'bg-danger' : 'bg-warning text-dark')"
+                                          th:text="${review.decision.name()}">DECISION</span>
+                                    <span th:if="${review.reviewer != null}" class="text-muted"
+                                          th:text="${review.reviewer.firstName + ' ' + review.reviewer.lastName}">Reviewer</span>
+                                </div>
+                                <small class="text-muted" th:if="${review.reviewedAt != null}"
+                                       th:text="${#temporals.format(review.reviewedAt, 'MMM dd, yyyy HH:mm')}"></small>
+                            </div>
+                            <p class="mt-2 mb-0" th:if="${review.comments != null}" th:text="${review.comments}"></p>
+                        </div>
+                    </div>
+                    <p th:if="${reviews == null || reviews.isEmpty()}" class="text-muted text-center py-4">No reviews yet.</p>
+                </div>
+            </div>
+            <!-- Add Feedback -->
+            <div class="card bg-dark border-secondary">
+                <div class="card-header"><h6 class="mb-0">Add Admin Feedback</h6></div>
+                <div class="card-body">
+                    <form th:action="@{/admin/projects/{id}/feedback(id=${project.id})}" method="post">
+                        <textarea name="comments" class="form-control mb-3" rows="3" placeholder="Enter your feedback..." required></textarea>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1"></i> Submit Feedback
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Analysis Tab -->
+        <div class="tab-pane fade" id="ai-analysis">
+            <div th:if="${insight != null}">
+                <div class="row g-4">
+                    <!-- Quality Scores -->
+                    <div class="col-md-4" th:if="${insight.qualityGrade != null}">
+                        <div class="card bg-dark border-secondary h-100">
+                            <div class="card-header"><h6 class="mb-0">Quality Assessment</h6></div>
+                            <div class="card-body text-center">
+                                <div class="display-2 fw-bold mb-3"
+                                     th:classappend="${insight.qualityGrade.startsWith('A')} ? 'text-success' :
+                                                     (${insight.qualityGrade.startsWith('B')} ? 'text-info' :
+                                                     (${insight.qualityGrade.startsWith('C')} ? 'text-warning' : 'text-danger'))"
+                                     th:text="${insight.qualityGrade}">B+</div>
+                                <div class="text-start">
+                                    <div class="mb-2" th:if="${insight.originalityScore != null}">
+                                        <small class="text-muted">Originality</small>
+                                        <div class="progress" style="height: 6px;"><div class="progress-bar bg-info" th:style="${'width:' + insight.originalityScore + '%'}"></div></div>
+                                        <small th:text="${insight.originalityScore + '/100'}"></small>
+                                    </div>
+                                    <div class="mb-2" th:if="${insight.technicalDepthScore != null}">
+                                        <small class="text-muted">Technical Depth</small>
+                                        <div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" th:style="${'width:' + insight.technicalDepthScore + '%'}"></div></div>
+                                        <small th:text="${insight.technicalDepthScore + '/100'}"></small>
+                                    </div>
+                                    <div class="mb-2" th:if="${insight.writingQualityScore != null}">
+                                        <small class="text-muted">Writing Quality</small>
+                                        <div class="progress" style="height: 6px;"><div class="progress-bar bg-success" th:style="${'width:' + insight.writingQualityScore + '%'}"></div></div>
+                                        <small th:text="${insight.writingQualityScore + '/100'}"></small>
+                                    </div>
+                                    <div class="mb-2" th:if="${insight.methodologyScore != null}">
+                                        <small class="text-muted">Methodology</small>
+                                        <div class="progress" style="height: 6px;"><div class="progress-bar bg-warning" th:style="${'width:' + insight.methodologyScore + '%'}"></div></div>
+                                        <small th:text="${insight.methodologyScore + '/100'}"></small>
+                                    </div>
+                                    <div class="mb-2" th:if="${insight.practicalApplicabilityScore != null}">
+                                        <small class="text-muted">Practical Applicability</small>
+                                        <div class="progress" style="height: 6px;"><div class="progress-bar bg-danger" th:style="${'width:' + insight.practicalApplicabilityScore + '%'}"></div></div>
+                                        <small th:text="${insight.practicalApplicabilityScore + '/100'}"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Executive Summary -->
+                    <div th:classappend="${insight.qualityGrade != null} ? 'col-md-8' : 'col-12'">
+                        <div class="card bg-dark border-secondary h-100" th:if="${insight.executiveSummary != null}">
+                            <div class="card-header"><h6 class="mb-0"><i class="bi bi-file-text me-2"></i>Executive Summary</h6></div>
+                            <div class="card-body"><p th:text="${insight.executiveSummary}"></p></div>
+                        </div>
+                    </div>
+                    <!-- Standard Insights -->
+                    <div class="col-md-6" th:if="${insight.summary != null}">
+                        <div class="card bg-dark border-secondary h-100">
+                            <div class="card-header"><h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Summary</h6></div>
+                            <div class="card-body"><p th:text="${insight.summary}"></p></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6" th:if="${insight.strengths != null}">
+                        <div class="card bg-dark border-success h-100">
+                            <div class="card-header"><h6 class="mb-0 text-success"><i class="bi bi-check-circle me-2"></i>Strengths</h6></div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li th:each="s : ${insight.strengths.split('\n')}" class="mb-1">
+                                        <i class="bi bi-check2 text-success me-1"></i><span th:text="${s}"></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6" th:if="${insight.gaps != null}">
+                        <div class="card bg-dark border-warning h-100">
+                            <div class="card-header"><h6 class="mb-0 text-warning"><i class="bi bi-exclamation-triangle me-2"></i>Gaps</h6></div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li th:each="g : ${insight.gaps.split('\n')}" class="mb-1">
+                                        <i class="bi bi-dash-circle text-warning me-1"></i><span th:text="${g}"></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6" th:if="${insight.improvements != null}">
+                        <div class="card bg-dark border-info h-100">
+                            <div class="card-header"><h6 class="mb-0 text-info"><i class="bi bi-tools me-2"></i>Improvements</h6></div>
+                            <div class="card-body"><p th:text="${insight.improvements}"></p></div>
+                        </div>
+                    </div>
+                    <div class="col-12" th:if="${insight.detailedAnalysis != null}">
+                        <div class="card bg-dark border-secondary">
+                            <div class="card-header"><h6 class="mb-0"><i class="bi bi-journal-text me-2"></i>Detailed Analysis</h6></div>
+                            <div class="card-body"><p th:text="${insight.detailedAnalysis}"></p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        Source: <span th:text="${insight.source}"></span> |
+                        Generated: <span th:if="${insight.generatedAt != null}" th:text="${#temporals.format(insight.generatedAt, 'MMM dd, yyyy HH:mm')}"></span>
+                    </small>
+                </div>
+            </div>
+            <div th:if="${insight == null}" class="text-center py-5">
+                <i class="bi bi-robot fs-1 text-muted d-block mb-3"></i>
+                <p class="text-muted">No AI analysis available yet.</p>
+                <form th:action="@{/admin/projects/{id}/ai-review(id=${project.id})}" method="post">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-robot me-1"></i> Generate AI Analysis
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Scoring Tab -->
+        <div class="tab-pane fade" id="scoring">
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="card bg-dark border-secondary">
+                        <div class="card-header"><h6 class="mb-0"><i class="bi bi-star me-2"></i>Score This Project</h6></div>
+                        <div class="card-body">
+                            <form th:action="@{/admin/projects/{id}/score(id=${project.id})}" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label d-flex justify-content-between">
+                                        <span>Originality (30%)</span>
+                                        <span class="badge bg-primary" id="origVal">50</span>
+                                    </label>
+                                    <input type="range" class="form-range" name="originality" min="0" max="100" value="50"
+                                           oninput="document.getElementById('origVal').textContent=this.value">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label d-flex justify-content-between">
+                                        <span>Methodology (25%)</span>
+                                        <span class="badge bg-primary" id="methVal">50</span>
+                                    </label>
+                                    <input type="range" class="form-range" name="methodology" min="0" max="100" value="50"
+                                           oninput="document.getElementById('methVal').textContent=this.value">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label d-flex justify-content-between">
+                                        <span>Presentation (20%)</span>
+                                        <span class="badge bg-primary" id="presVal">50</span>
+                                    </label>
+                                    <input type="range" class="form-range" name="presentation" min="0" max="100" value="50"
+                                           oninput="document.getElementById('presVal').textContent=this.value">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label d-flex justify-content-between">
+                                        <span>Impact (25%)</span>
+                                        <span class="badge bg-primary" id="impVal">50</span>
+                                    </label>
+                                    <input type="range" class="form-range" name="impact" min="0" max="100" value="50"
+                                           oninput="document.getElementById('impVal').textContent=this.value">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Comments</label>
+                                    <textarea name="comments" class="form-control" rows="3" placeholder="Optional scoring comments..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-check-lg me-1"></i> Submit Score
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card bg-dark border-secondary">
+                        <div class="card-header"><h6 class="mb-0">Existing Scores</h6></div>
+                        <div class="card-body">
+                            <div th:if="${avgScore != null}" class="text-center mb-4">
+                                <div class="display-4 fw-bold text-info" th:text="${#numbers.formatDecimal(avgScore, 1, 1)}">0</div>
+                                <small class="text-muted">Average Score /100</small>
+                            </div>
+                            <div th:each="score : ${scores}" class="border-bottom border-secondary py-2">
+                                <div class="d-flex justify-content-between">
+                                    <span th:text="${score.scorer.firstName + ' ' + score.scorer.lastName}">Scorer</span>
+                                    <strong th:text="${#numbers.formatDecimal(score.overallScore, 1, 1)}">0</strong>
+                                </div>
+                                <small class="text-muted" th:if="${score.comments != null}" th:text="${score.comments}"></small>
+                            </div>
+                            <p th:if="${scores == null || scores.isEmpty()}" class="text-muted text-center py-3">No scores yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

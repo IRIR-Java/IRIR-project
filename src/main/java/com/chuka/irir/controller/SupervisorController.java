@@ -1,4 +1,4 @@
-package com.chuka.irir.service;
+package com.chuka.irir.controller;
 
 import com.chuka.irir.model.Project;
 import com.chuka.irir.model.ProjectStatus;
@@ -10,6 +10,8 @@ import com.chuka.irir.repository.ProjectRepository;
 import com.chuka.irir.repository.ReviewRepository;
 import com.chuka.irir.repository.SimilarityReportRepository;
 import com.chuka.irir.repository.UserRepository;
+import com.chuka.irir.service.SimilarityDetectionService;
+import com.chuka.irir.service.NotificationService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

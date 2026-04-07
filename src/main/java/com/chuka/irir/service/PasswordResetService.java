@@ -1,6 +1,8 @@
 package com.chuka.irir.service;
 
+import com.chuka.irir.model.PasswordResetToken;
 import com.chuka.irir.model.User;
+import com.chuka.irir.repository.PasswordResetTokenRepository;
 import com.chuka.irir.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;

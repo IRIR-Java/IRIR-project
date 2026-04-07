@@ -111,15 +111,9 @@ public class DashboardController {
     }
 
     /**
-     * Prepares the admin dashboard with system-wide statistics.
+     * Redirects admin to the dedicated admin dashboard controller.
      */
     private String adminDashboard(Model model) {
-        model.addAttribute("totalUsers", userRepository.count());
-        model.addAttribute("studentCount", userRepository.countByRole(Role.STUDENT));
-        model.addAttribute("supervisorCount", userRepository.countByRole(Role.SUPERVISOR));
-        model.addAttribute("directorateCount", userRepository.countByRole(Role.DIRECTORATE));
-        model.addAttribute("totalProjects", projectRepository.countSubmittedProjects());
-        model.addAttribute("pageTitle", "Admin Dashboard");
-        return "dashboard/admin";
+        return "redirect:/admin/dashboard";
     }
 }

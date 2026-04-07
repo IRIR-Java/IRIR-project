@@ -97,15 +97,18 @@ public class SecurityConfig {
                 // Public pages — accessible without authentication
                 .requestMatchers(
                     "/", "/login", "/register",
-                    "/css/**", "/js/**", "/images/**",
-                    "/webjars/**", "/error/**"
+                    "/forgot-password", "/reset-password",
+                    "/gallery/**",
+                    "/css/**", "/js/**", "/images/**", "/favicon.ico",
+                    "/webjars/**", "/error/**",
+                    "/h2-console/**"
                 ).permitAll()
 
-                // Student pages — accessible by STUDENT and ADMIN (for testing)
+                // Student pages — accessible by STUDENT and ADMIN
                 .requestMatchers("/student/**").hasAnyRole("STUDENT", "ADMIN")
 
-                // Supervisor-only pages
-                .requestMatchers("/supervisor/**").hasRole("SUPERVISOR")
+                // Supervisor-only pages — also accessible by ADMIN
+                .requestMatchers("/supervisor/**").hasAnyRole("SUPERVISOR", "ADMIN")
 
                 // Directorate-only pages
                 .requestMatchers("/directorate/**").hasRole("DIRECTORATE")

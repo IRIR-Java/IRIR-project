@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Analytics')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container mt-5 pt-4 flex-grow-1">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-graph-up me-2"></i>Analytics Dashboard</h2>
+            <p class="text-muted mb-0">System-wide research project analytics</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card bg-dark border-info h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Total Projects</p>
+                            <h3 class="mb-0" th:text="${totalProjects}">0</h3>
+                        </div>
+                        <i class="bi bi-folder2-open fs-2 text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card bg-dark border-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Total Users</p>
+                            <h3 class="mb-0" th:text="${totalUsers}">0</h3>
+                        </div>
+                        <i class="bi bi-people fs-2 text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card bg-dark border-success h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Approval Rate</p>
+                            <h3 class="mb-0" th:text="${approvalRate + '%'}">0%</h3>
+                        </div>
+                        <i class="bi bi-check-circle fs-2 text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card bg-dark border-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">This Month</p>
+                            <h3 class="mb-0" th:text="${projectsThisMonth}">0</h3>
+                        </div>
+                        <i class="bi bi-calendar-event fs-2 text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-header"><h6 class="mb-0">Projects by Status</h6></div>
+                <div class="card-body">
+                    <canvas id="statusChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-header"><h6 class="mb-0">Status Distribution</h6></div>
+                <div class="card-body">
+                    <div th:each="entry : ${statusCounts}" class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span th:text="${entry.key}" class="small"></span>
+                            <span class="small fw-bold" th:text="${entry.value}"></span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar"
+                                 th:classappend="${entry.key == 'APPROVED'} ? 'bg-success' :
+                                                 (${entry.key == 'REJECTED'} ? 'bg-danger' :
+                                                 (${entry.key == 'SUBMITTED'} ? 'bg-info' :
+                                                 (${entry.key == 'FLAGGED'} ? 'bg-warning' : 'bg-secondary')))"
+                                 th:style="${'width: ' + (totalProjects > 0 ? (entry.value * 100 / totalProjects) : 0) + '%'}"
+                                 role="progressbar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="row g-3">
+        <div class="col-md-4">
+            <a th:href="@{/admin/projects?status=SUBMITTED}" class="card bg-dark border-info text-decoration-none h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-hourglass-split fs-2 text-info"></i>
+                    <p class="mt-2 mb-0">View Pending Projects</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/admin/projects?status=FLAGGED}" class="card bg-dark border-danger text-decoration-none h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-flag fs-2 text-danger"></i>
+                    <p class="mt-2 mb-0">View Flagged Projects</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/admin/users}" class="card bg-dark border-primary text-decoration-none h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people fs-2 text-primary"></i>
+                    <p class="mt-2 mb-0">Manage Users</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+<script th:inline="javascript">
+    const labels = /*[[${statusLabels}]]*/ [];
+    const values = /*[[${statusValues}]]*/ [];
+    const colors = labels.map(l => {
+        switch(l) {
+            case 'APPROVED': return '#198754';
+            case 'REJECTED': return '#dc3545';
+            case 'SUBMITTED': return '#0dcaf0';
+            case 'UNDER_REVIEW': return '#ffc107';
+            case 'FLAGGED': return '#fd7e14';
+            case 'DRAFT': return '#6c757d';
+            case 'INCUBATION': return '#6f42c1';
+            default: return '#adb5bd';
+        }
+    });
+
+    if (document.getElementById('statusChart')) {
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#adb5bd', padding: 15 } }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.chuka.irir.service;
 
+import com.chuka.irir.dto.AiInsightPayload;
 import com.chuka.irir.model.Project;
 import com.chuka.irir.model.ProjectInsight;
 import com.chuka.irir.repository.ProjectInsightRepository;
@@ -299,6 +300,109 @@ public class AiInsightService {
             }
         }
         return trimmed;
+    }
+
+    /**
+     * Generate a detailed AI review with quality scores, executive summary, and letter grade.
+     * Used by admin for comprehensive project assessment.
+     */
+    public ProjectInsight generateDetailedReview(Project project) {
+        Optional<ProjectInsight> existing = insightRepository.findByProjectId(project.getId());
+        ProjectInsight insight = existing.orElseGet(() -> {
+            ProjectInsight newInsight = buildInsight(project);
+            newInsight.setProject(project);
+            return newInsight;
+        });
+
+        String detailedPrompt = buildDetailedReviewPrompt(project);
+        Optional<String> aiResponse = geminiClient.generateContent(detailedPrompt);
+
+        if (aiResponse.isPresent()) {
+            try {
+                String cleaned = stripCodeFences(aiResponse.get());
+                com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(cleaned);
+
+                insight.setExecutiveSummary(getTextOrNull(root, "executiveSummary"));
+                insight.setQualityGrade(getTextOrNull(root, "qualityGrade"));
+                insight.setOriginalityScore(getIntOrNull(root, "originalityScore"));
+                insight.setTechnicalDepthScore(getIntOrNull(root, "technicalDepthScore"));
+                insight.setWritingQualityScore(getIntOrNull(root, "writingQualityScore"));
+                insight.setMethodologyScore(getIntOrNull(root, "methodologyScore"));
+                insight.setPracticalApplicabilityScore(getIntOrNull(root, "practicalApplicabilityScore"));
+                insight.setImprovements(getTextOrNull(root, "improvements"));
+                insight.setDetailedAnalysis(getTextOrNull(root, "detailedAnalysis"));
+                insight.setGeneratedAt(LocalDateTime.now());
+                insight.setSource("gemini");
+            } catch (Exception e) {
+                logger.warn("Failed to parse detailed review response: {}", e.getMessage());
+                applyHeuristicDetailedReview(insight, project);
+            }
+        } else {
+            applyHeuristicDetailedReview(insight, project);
+        }
+
+        return insightRepository.save(insight);
+    }
+
+    private void applyHeuristicDetailedReview(ProjectInsight insight, Project project) {
+        insight.setExecutiveSummary("This project titled \"" + project.getTitle() +
+                "\" addresses a research topic in computer science. A detailed AI analysis could not be generated at this time.");
+        insight.setQualityGrade("B");
+        insight.setOriginalityScore(65);
+        insight.setTechnicalDepthScore(60);
+        insight.setWritingQualityScore(70);
+        insight.setMethodologyScore(60);
+        insight.setPracticalApplicabilityScore(65);
+        insight.setImprovements("Consider strengthening the methodology section and adding more references to related work.");
+        insight.setDetailedAnalysis("Heuristic assessment - AI service unavailable. Manual review recommended.");
+        insight.setGeneratedAt(LocalDateTime.now());
+        insight.setSource("heuristic");
+    }
+
+    private String buildDetailedReviewPrompt(Project project) {
+        StringBuilder ctx = new StringBuilder();
+        ctx.append("Title: ").append(project.getTitle()).append("\n");
+        if (StringUtils.hasText(project.getAbstractText())) {
+            ctx.append("Abstract: ").append(project.getAbstractText()).append("\n");
+        }
+        if (project.getKeywords() != null && !project.getKeywords().isEmpty()) {
+            ctx.append("Keywords: ").append(String.join(", ", project.getKeywords())).append("\n");
+        }
+        if (StringUtils.hasText(project.getExtractedText())) {
+            String extracted = project.getExtractedText();
+            ctx.append("Content: ").append(extracted.length() > MAX_CONTEXT_CHARS ? extracted.substring(0, MAX_CONTEXT_CHARS) : extracted).append("\n");
+        }
+
+        return """
+                You are a senior academic reviewer. Provide a comprehensive quality assessment of this research project.
+                Respond ONLY with valid JSON matching this schema:
+                {
+                  "executiveSummary": "2-3 paragraph executive summary",
+                  "qualityGrade": "A+, A, B+, B, C, D, or F",
+                  "originalityScore": 0-100,
+                  "technicalDepthScore": 0-100,
+                  "writingQualityScore": 0-100,
+                  "methodologyScore": 0-100,
+                  "practicalApplicabilityScore": 0-100,
+                  "improvements": "Detailed improvement suggestions",
+                  "detailedAnalysis": "In-depth analysis covering methodology, literature positioning, and significance"
+                }
+                Rules:
+                - Be constructive but honest in assessment.
+                - Scores should reflect academic rigor expected of a final-year university project.
+                - Do not include markdown, only JSON.
+                Project Context:
+                """ + ctx;
+    }
+
+    private String getTextOrNull(com.fasterxml.jackson.databind.JsonNode node, String field) {
+        com.fasterxml.jackson.databind.JsonNode val = node.get(field);
+        return (val != null && !val.isNull()) ? val.asText() : null;
+    }
+
+    private Integer getIntOrNull(com.fasterxml.jackson.databind.JsonNode node, String field) {
+        com.fasterxml.jackson.databind.JsonNode val = node.get(field);
+        return (val != null && !val.isNull() && val.isNumber()) ? val.asInt() : null;
     }
 
     private String truncateSentence(String text, int maxChars) {

@@ -1,6 +1,5 @@
-package com.chuka.irir.service;
+package com.chuka.irir.model;
 
-import com.chuka.irir.model.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -25,7 +24,6 @@ public class PasswordResetToken {
     @Column(nullable = false)
     private boolean used = false;
 
-    // Constructors
     public PasswordResetToken() {}
 
     public PasswordResetToken(String token, User user) {
@@ -35,7 +33,6 @@ public class PasswordResetToken {
         this.used = false;
     }
 
-    // Getters & Setters
     public Long getId() { return id; }
 
     public String getToken() { return token; }

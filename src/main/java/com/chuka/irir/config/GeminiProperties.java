@@ -1,4 +1,4 @@
-package com.chuka.irir.service;
+package com.chuka.irir.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

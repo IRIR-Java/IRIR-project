@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Settings')}"></head>
+<body class="d-flex flex-column min-vh-100">
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container mt-5 pt-4 flex-grow-1">
+    <h2 class="mb-4"><i class="bi bi-gear me-2"></i>System Settings</h2>
+
+    <div class="row g-4">
+        <!-- Similarity Settings -->
+        <div class="col-lg-6">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-header"><h6 class="mb-0"><i class="bi bi-copy me-2"></i>Similarity Detection</h6></div>
+                <div class="card-body">
+                    <dl>
+                        <dt class="text-muted">Flag Threshold</dt>
+                        <dd>70% (potential duplicate)</dd>
+                        <dt class="text-muted">Warning Threshold</dt>
+                        <dd>40% (similar content)</dd>
+                        <dt class="text-muted">Max Results</dt>
+                        <dd>10 matched projects</dd>
+                        <dt class="text-muted">Algorithm</dt>
+                        <dd>TF-IDF Cosine Similarity + Lucene MoreLikeThis</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Settings -->
+        <div class="col-lg-6">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-header"><h6 class="mb-0"><i class="bi bi-robot me-2"></i>AI Configuration</h6></div>
+                <div class="card-body">
+                    <dl>
+                        <dt class="text-muted">Model</dt>
+                        <dd>Gemini 1.5 Flash</dd>
+                        <dt class="text-muted">Temperature</dt>
+                        <dd>0.3 (focused, factual)</dd>
+                        <dt class="text-muted">Max Output Tokens</dt>
+                        <dd>600</dd>
+                        <dt class="text-muted">Features</dt>
+                        <dd>Project insights, quality scoring, executive summaries, improvement suggestions</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Upload Settings -->
+        <div class="col-lg-6">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-header"><h6 class="mb-0"><i class="bi bi-cloud-upload me-2"></i>File Upload</h6></div>
+                <div class="card-body">
+                    <dl>
+                        <dt class="text-muted">Max File Size</dt>
+                        <dd>50 MB</dd>
+                        <dt class="text-muted">Allowed Types</dt>
+                        <dd>PDF, DOCX, ZIP</dd>
+                        <dt class="text-muted">Text Extraction</dt>
+                        <dd>Apache Tika 3.3.0 (up to 200,000 characters)</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="col-lg-6">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-header"><h6 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Quick Links</h6></div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <a th:href="@{/admin/users}" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">
+                            <i class="bi bi-people me-2"></i> User Management
+                        </a>
+                        <a th:href="@{/admin/logs}" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">
+                            <i class="bi bi-journal-text me-2"></i> Audit Logs
+                        </a>
+                        <a th:href="@{/admin/backup}" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">
+                            <i class="bi bi-database me-2"></i> Backup & Restore
+                        </a>
+                        <a th:href="@{/admin/analytics}" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">
+                            <i class="bi bi-graph-up me-2"></i> Analytics Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

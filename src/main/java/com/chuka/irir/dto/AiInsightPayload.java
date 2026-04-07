@@ -1,4 +1,4 @@
-package com.chuka.irir.service;
+package com.chuka.irir.dto;
 
 import java.util.List;
 

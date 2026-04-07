@@ -70,4 +70,23 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     /** Find all projects with a specific status (unordered). */
     List<Project> findByStatus(ProjectStatus status);
+
+    /** Find all projects ordered by most recent. */
+    List<Project> findAllByOrderByCreatedAtDesc();
+
+    /** Find projects with status in a list of statuses. */
+    List<Project> findByStatusIn(java.util.Collection<ProjectStatus> statuses);
+
+    /** Search + filter: by status and search term. */
+    @Query("SELECT p FROM Project p WHERE " +
+           "(:status IS NULL OR p.status = :status) AND " +
+           "(:term IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
+           "LOWER(p.abstractText) LIKE LOWER(CONCAT('%', :term, '%')))" +
+           " ORDER BY p.createdAt DESC")
+    List<Project> findFilteredProjects(@Param("status") ProjectStatus status,
+                                       @Param("term") String term);
+
+    /** Count projects submitted this month. */
+    @Query("SELECT COUNT(p) FROM Project p WHERE p.createdAt >= :startOfMonth")
+    long countProjectsSince(@Param("startOfMonth") LocalDateTime startOfMonth);
 }

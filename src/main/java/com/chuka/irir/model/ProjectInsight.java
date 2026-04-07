@@ -51,4 +51,26 @@ public class ProjectInsight {
 
     @Column(name = "generated_at")
     private LocalDateTime generatedAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String executiveSummary;
+
+    @Column(length = 5)
+    private String qualityGrade;
+
+    private Integer originalityScore;
+
+    private Integer technicalDepthScore;
+
+    private Integer writingQualityScore;
+
+    private Integer methodologyScore;
+
+    private Integer practicalApplicabilityScore;
+
+    @Column(columnDefinition = "TEXT")
+    private String improvements;
+
+    @Column(columnDefinition = "TEXT")
+    private String detailedAnalysis;
 }
