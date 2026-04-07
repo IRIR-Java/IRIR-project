@@ -122,13 +122,9 @@
                         </td>
                         <td>
                             <span class="badge"
-                                  th:classappend="${project.status.name() == 'DRAFT'} ? 'bg-secondary' :
-                                                  (${project.status.name() == 'SUBMITTED'} ? 'bg-info' :
-                                                  (${project.status.name() == 'UNDER_REVIEW'} ? 'bg-warning text-dark' :
-                                                  (${project.status.name() == 'APPROVED'} ? 'bg-success' :
-                                                  (${project.status.name() == 'REJECTED'} ? 'bg-danger' :
-                                                  (${project.status.name() == 'FLAGGED'} ? 'bg-warning text-dark' : 'bg-purple')))))"
-                                  th:text="${project.status.name()}">STATUS</span>
+                                  th:with="st=${project.status.name()}"
+                                  th:classappend="${st == 'DRAFT' ? 'bg-secondary' : (st == 'SUBMITTED' ? 'bg-info' : (st == 'UNDER_REVIEW' ? 'bg-warning text-dark' : (st == 'APPROVED' ? 'bg-success' : (st == 'REJECTED' ? 'bg-danger' : (st == 'FLAGGED' ? 'bg-warning text-dark' : 'bg-purple')))))}"
+                                  th:text="${st}">STATUS</span>
                         </td>
                         <td>
                             <span th:if="${project.submittedAt != null}"

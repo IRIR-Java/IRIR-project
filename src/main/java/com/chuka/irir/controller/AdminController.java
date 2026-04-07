@@ -12,6 +12,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -33,6 +38,7 @@ public class AdminController {
     private final AuditLogRepository auditLogRepository;
     private final AiInsightService aiInsightService;
     private final NotificationService notificationService;
+    private final PasswordEncoder passwordEncoder;
 
     public AdminController(UserRepository userRepository,
                            ProjectRepository projectRepository,
@@ -42,7 +48,8 @@ public class AdminController {
                            SimilarityReportRepository similarityReportRepository,
                            AuditLogRepository auditLogRepository,
                            AiInsightService aiInsightService,
-                           NotificationService notificationService) {
+                           NotificationService notificationService,
+                           PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
         this.reviewRepository = reviewRepository;
@@ -52,6 +59,7 @@ public class AdminController {
         this.auditLogRepository = auditLogRepository;
         this.aiInsightService = aiInsightService;
         this.notificationService = notificationService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // ──────────────────────── Dashboard ────────────────────────
@@ -88,6 +96,7 @@ public class AdminController {
     // ──────────────────────── Projects List ────────────────────────
 
     @GetMapping("/projects")
+    @Transactional(readOnly = true)
     public String projects(@RequestParam(name = "status", required = false) String statusStr,
                            @RequestParam(name = "q", required = false) String query,
                            Model model) {
@@ -95,13 +104,24 @@ public class AdminController {
         if (statusStr != null && !statusStr.isBlank()) {
             try { filterStatus = ProjectStatus.valueOf(statusStr); } catch (IllegalArgumentException ignored) {}
         }
-        String searchTerm = (query != null && !query.isBlank()) ? query : null;
+        String searchTerm = (query != null && !query.isBlank()) ? query.trim() : null;
 
         List<Project> projects;
-        if (filterStatus != null || searchTerm != null) {
-            projects = projectRepository.findFilteredProjects(filterStatus, searchTerm);
+        if (filterStatus != null && searchTerm != null) {
+            projects = projectRepository.findByStatusAndSearchTerm(filterStatus, searchTerm);
+        } else if (filterStatus != null) {
+            projects = projectRepository.findByStatusOrderBySubmittedAtDesc(filterStatus);
+        } else if (searchTerm != null) {
+            projects = projectRepository.findBySearchTerm(searchTerm);
         } else {
             projects = projectRepository.findAllByOrderByCreatedAtDesc();
+        }
+
+        // Force-initialize lazy submittedBy to avoid LazyInitializationException in template
+        for (Project p : projects) {
+            if (p.getSubmittedBy() != null) {
+                p.getSubmittedBy().getFirstName();
+            }
         }
 
         long total = projectRepository.count();
@@ -124,6 +144,7 @@ public class AdminController {
     // ──────────────────────── Project Detail ────────────────────────
 
     @GetMapping("/projects/{id}")
+    @Transactional(readOnly = true)
     public String projectDetail(@PathVariable("id") Long id, Model model,
                                 RedirectAttributes redirectAttributes) {
         Optional<Project> opt = projectRepository.findById(id);
@@ -132,12 +153,24 @@ public class AdminController {
             return "redirect:/admin/projects";
         }
         Project project = opt.get();
-        // Initialize lazy collections
+        // Initialize lazy associations to avoid LazyInitializationException in template
         if (project.getFiles() != null) project.getFiles().size();
         if (project.getKeywords() != null) project.getKeywords().size();
+        if (project.getSubmittedBy() != null) project.getSubmittedBy().getFirstName();
+        if (project.getSupervisor() != null) project.getSupervisor().getFirstName();
 
         List<Review> reviews = reviewRepository.findByProjectIdOrderByReviewedAtDesc(id);
+        // Initialize lazy reviewer on each review
+        for (Review r : reviews) {
+            if (r.getReviewer() != null) r.getReviewer().getFirstName();
+        }
+
         List<ProjectScore> scores = projectScoreRepository.findByProjectId(id);
+        // Initialize lazy scorer on each score
+        for (ProjectScore s : scores) {
+            if (s.getScorer() != null) s.getScorer().getFirstName();
+        }
+
         Double avgScore = projectScoreRepository.findAverageScoreByProjectId(id);
         Optional<ProjectInsight> insight = projectInsightRepository.findByProjectId(id);
         List<SimilarityReport> simReports = similarityReportRepository.findBySourceProjectIdWithDetails(id);
@@ -311,8 +344,74 @@ public class AdminController {
         return "admin/users-create";
     }
 
+    @PostMapping("/users/create")
+    public String createUserSubmit(@RequestParam("firstName") String firstName,
+                                   @RequestParam("lastName") String lastName,
+                                   @RequestParam("email") String email,
+                                   @RequestParam(value = "studentId", required = false) String studentId,
+                                   @RequestParam("role") String role,
+                                   @RequestParam(value = "department", required = false) String department,
+                                   @RequestParam("password") String password,
+                                   RedirectAttributes redirectAttributes) {
+        if (firstName == null || firstName.isBlank()
+                || lastName == null || lastName.isBlank()
+                || email == null || email.isBlank()
+                || role == null || role.isBlank()
+                || password == null || password.isBlank()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Please fill in all required fields.");
+            return "redirect:/admin/users/create";
+        }
+
+        if (userRepository.existsByEmail(email.trim())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "A user with this email already exists.");
+            return "redirect:/admin/users/create";
+        }
+
+        if (studentId != null && !studentId.isBlank() && userRepository.existsByStudentId(studentId.trim())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "A user with this student ID already exists.");
+            return "redirect:/admin/users/create";
+        }
+
+        Role resolvedRole;
+        try {
+            resolvedRole = Role.valueOf(role);
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Invalid role selected.");
+            return "redirect:/admin/users/create";
+        }
+
+        User user = User.builder()
+                .firstName(firstName.trim())
+                .lastName(lastName.trim())
+                .email(email.trim())
+                .studentId(studentId != null ? studentId.trim() : null)
+                .department((department != null && !department.isBlank()) ? department.trim() : "Computer Science")
+                .role(resolvedRole)
+                .password(passwordEncoder.encode(password))
+                .enabled(true)
+                .accountNonLocked(true)
+                .build();
+
+        userRepository.save(user);
+        redirectAttributes.addFlashAttribute("successMessage", "User created successfully.");
+        return "redirect:/admin/users";
+    }
+
     @GetMapping("/logs")
-    public String logs(Model model) {
+    @Transactional(readOnly = true)
+    public String logs(@RequestParam(name = "page", defaultValue = "0") int page,
+                       Model model) {
+        int safePage = Math.max(0, page);
+        Page<AuditLog> logPage = auditLogRepository.findAllByOrderByTimestampDesc(PageRequest.of(safePage, 50));
+        for (AuditLog log : logPage.getContent()) {
+            if (log.getUser() != null) {
+                log.getUser().getFirstName();
+            }
+        }
+        model.addAttribute("logs", logPage.getContent());
+        model.addAttribute("page", safePage);
+        model.addAttribute("hasNext", logPage.hasNext());
+        model.addAttribute("hasPrev", logPage.hasPrevious());
         model.addAttribute("pageTitle", "System Logs");
         return "admin/logs";
     }

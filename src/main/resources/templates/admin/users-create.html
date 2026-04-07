@@ -15,7 +15,7 @@
                             <i class="bi bi-person-plus me-2"></i>
                             Create User
                         </h1>
-                        <p class="dashboard-subtitle">Admin onboarding tools are in progress</p>
+                        <p class="dashboard-subtitle">Create staff or student accounts manually</p>
                     </div>
                     <div class="col-md-4 text-md-end">
                         <a th:href="@{/admin/users}" class="btn btn-outline-primary btn-lg">
@@ -25,14 +25,62 @@
                 </div>
             </div>
 
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle me-2"></i><span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
             <div class="content-card">
                 <div class="content-card-header">
-                    <h2><i class="bi bi-info-circle me-2"></i>Coming Soon</h2>
+                    <h2><i class="bi bi-person-badge me-2"></i>New Account Details</h2>
                 </div>
                 <div class="content-card-body">
-                    <p class="mb-0">
-                        User creation workflows will be added next. For now, use the standard registration
-                        flow for student accounts and update roles through the database if needed.
+                    <form th:action="@{/admin/users/create}" method="post" class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" name="firstName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="lastName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Student ID (optional)</label>
+                            <input type="text" class="form-control" name="studentId">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" name="role" required>
+                                <option value="STUDENT">Student</option>
+                                <option value="SUPERVISOR">Supervisor</option>
+                                <option value="DIRECTORATE">Directorate</option>
+                                <option value="ADMIN">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-control" name="department" placeholder="Computer Science">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Temporary Password</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-person-plus me-1"></i> Create User
+                            </button>
+                        </div>
+                    </form>
+                    <p class="text-muted small mt-3 mb-0">
+                        Tip: Share the temporary password securely and ask the user to update it after first login.
                     </p>
                 </div>
             </div>

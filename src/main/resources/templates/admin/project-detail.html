@@ -34,11 +34,9 @@
                     <h3 class="mb-2" th:text="${project.title}">Project Title</h3>
                     <div class="d-flex gap-2 flex-wrap align-items-center">
                         <span class="badge fs-6"
-                              th:classappend="${project.status.name() == 'APPROVED'} ? 'bg-success' :
-                                              (${project.status.name() == 'REJECTED'} ? 'bg-danger' :
-                                              (${project.status.name() == 'FLAGGED'} ? 'bg-warning text-dark' :
-                                              (${project.status.name() == 'SUBMITTED'} ? 'bg-info' : 'bg-secondary')))"
-                              th:text="${project.status.name()}">STATUS</span>
+                              th:with="st=${project.status.name()}"
+                              th:classappend="${st == 'APPROVED' ? 'bg-success' : (st == 'REJECTED' ? 'bg-danger' : (st == 'FLAGGED' ? 'bg-warning text-dark' : (st == 'SUBMITTED' ? 'bg-info' : 'bg-secondary')))}"
+                              th:text="${st}">STATUS</span>
                         <span class="text-muted" th:if="${project.submittedBy != null}">
                             <i class="bi bi-person me-1"></i>
                             <span th:text="${project.submittedBy.firstName + ' ' + project.submittedBy.lastName}"></span>
@@ -112,7 +110,7 @@
                                 <dt class="text-muted small">Academic Year</dt>
                                 <dd th:text="${project.academicYear != null ? project.academicYear : 'N/A'}"></dd>
                                 <dt class="text-muted small">Views / Downloads</dt>
-                                <dd th:text="${(project.viewCount != null ? project.viewCount : 0) + ' / ' + (project.downloadCount != null ? project.downloadCount : 0)}"></dd>
+                                <dd th:text="${project.viewCount + ' / ' + project.downloadCount}"></dd>
                             </dl>
                         </div>
                     </div>
@@ -144,8 +142,8 @@
                         <div th:each="file : ${project.files}" class="d-flex align-items-center justify-content-between border-bottom border-secondary py-3">
                             <div class="d-flex align-items-center gap-3">
                                 <i class="bi fs-3"
-                                   th:classappend="${file.fileType != null && file.fileType.contains('pdf')} ? 'bi-file-earmark-pdf text-danger' :
-                                                   (${file.fileType != null && file.fileType.contains('word')} ? 'bi-file-earmark-word text-primary' : 'bi-file-earmark-zip text-warning')"></i>
+                                   th:with="ft=${file.fileType != null ? file.fileType : ''}"
+                                   th:classappend="${ft.contains('pdf') ? 'bi-file-earmark-pdf text-danger' : (ft.contains('word') ? 'bi-file-earmark-word text-primary' : 'bi-file-earmark-zip text-warning')}"></i>
                                 <div>
                                     <strong th:text="${file.fileName}">filename.pdf</strong>
                                     <br><small class="text-muted" th:text="${file.fileType}">application/pdf</small>
@@ -173,15 +171,15 @@
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <strong th:if="${report.targetProject != null}" th:text="${report.targetProject.title}">Matched Project</strong>
                                 <span class="badge"
-                                      th:classappend="${report.similarityScore != null && report.similarityScore >= 0.70} ? 'bg-danger' :
-                                                      (${report.similarityScore != null && report.similarityScore >= 0.40} ? 'bg-warning text-dark' : 'bg-success')"
-                                      th:text="${report.similarityScore != null ? #numbers.formatDecimal(report.similarityScore * 100, 1, 1) + '%' : 'N/A'}">0%</span>
+                                      th:with="ss=${report.similarityScore}"
+                                      th:classappend="${ss != null && ss >= 0.70 ? 'bg-danger' : (ss != null && ss >= 0.40 ? 'bg-warning text-dark' : 'bg-success')}"
+                                      th:text="${ss != null ? #numbers.formatDecimal(ss * 100, 1, 1) + '%' : 'N/A'}">0%</span>
                             </div>
                             <div class="progress" style="height: 8px;">
                                 <div class="progress-bar"
-                                     th:classappend="${report.similarityScore != null && report.similarityScore >= 0.70} ? 'bg-danger' :
-                                                     (${report.similarityScore != null && report.similarityScore >= 0.40} ? 'bg-warning' : 'bg-success')"
-                                     th:style="${'width: ' + (report.similarityScore != null ? report.similarityScore * 100 : 0) + '%'}"
+                                     th:with="ss=${report.similarityScore}"
+                                     th:classappend="${ss != null && ss >= 0.70 ? 'bg-danger' : (ss != null && ss >= 0.40 ? 'bg-warning' : 'bg-success')}"
+                                     th:style="${'width: ' + (ss != null ? ss * 100 : 0) + '%'}"
                                      role="progressbar"></div>
                             </div>
                         </div>
@@ -202,9 +200,9 @@
                             <div class="d-flex justify-content-between">
                                 <div>
                                     <span class="badge me-2"
-                                          th:classappend="${review.decision.name() == 'APPROVED'} ? 'bg-success' :
-                                                          (${review.decision.name() == 'REJECTED'} ? 'bg-danger' : 'bg-warning text-dark')"
-                                          th:text="${review.decision.name()}">DECISION</span>
+                                          th:with="dec=${review.decision.name()}"
+                                          th:classappend="${dec == 'APPROVED' ? 'bg-success' : (dec == 'REJECTED' ? 'bg-danger' : 'bg-warning text-dark')}"
+                                          th:text="${dec}">DECISION</span>
                                     <span th:if="${review.reviewer != null}" class="text-muted"
                                           th:text="${review.reviewer.firstName + ' ' + review.reviewer.lastName}">Reviewer</span>
                                 </div>
@@ -241,10 +239,9 @@
                             <div class="card-header"><h6 class="mb-0">Quality Assessment</h6></div>
                             <div class="card-body text-center">
                                 <div class="display-2 fw-bold mb-3"
-                                     th:classappend="${insight.qualityGrade.startsWith('A')} ? 'text-success' :
-                                                     (${insight.qualityGrade.startsWith('B')} ? 'text-info' :
-                                                     (${insight.qualityGrade.startsWith('C')} ? 'text-warning' : 'text-danger'))"
-                                     th:text="${insight.qualityGrade}">B+</div>
+                                     th:with="gr=${insight.qualityGrade}"
+                                     th:classappend="${gr.startsWith('A') ? 'text-success' : (gr.startsWith('B') ? 'text-info' : (gr.startsWith('C') ? 'text-warning' : 'text-danger'))}"
+                                     th:text="${gr}">B+</div>
                                 <div class="text-start">
                                     <div class="mb-2" th:if="${insight.originalityScore != null}">
                                         <small class="text-muted">Originality</small>
@@ -276,7 +273,7 @@
                         </div>
                     </div>
                     <!-- Executive Summary -->
-                    <div th:classappend="${insight.qualityGrade != null} ? 'col-md-8' : 'col-12'">
+                    <div th:classappend="${insight.qualityGrade != null ? 'col-md-8' : 'col-12'}">
                         <div class="card bg-dark border-secondary h-100" th:if="${insight.executiveSummary != null}">
                             <div class="card-header"><h6 class="mb-0"><i class="bi bi-file-text me-2"></i>Executive Summary</h6></div>
                             <div class="card-body"><p th:text="${insight.executiveSummary}"></p></div>

@@ -27,10 +27,43 @@
 
             <div class="content-card">
                 <div class="content-card-header">
-                    <h2><i class="bi bi-info-circle me-2"></i>Coming Soon</h2>
+                    <h2><i class="bi bi-shield-check me-2"></i>Backup Checklist</h2>
                 </div>
                 <div class="content-card-body">
-                    <p class="mb-0">Backup scheduling and export tools will live here.</p>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Export the MySQL database nightly.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Archive uploaded project files from the uploads directory.</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Back up the Lucene index for faster search recovery.</li>
+                        <li class="mb-0"><i class="bi bi-check-circle text-success me-2"></i>Store backups in a secure off-site location.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="content-card mt-4">
+                <div class="content-card-header">
+                    <h2><i class="bi bi-folder me-2"></i>Key Directories</h2>
+                </div>
+                <div class="content-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded bg-transparent">
+                                <h6 class="mb-1">Uploads</h6>
+                                <p class="text-muted small mb-0"><code>uploads/</code> stores submitted project files.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded bg-transparent">
+                                <h6 class="mb-1">Lucene Index</h6>
+                                <p class="text-muted small mb-0"><code>lucene-index/</code> accelerates search.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded bg-transparent">
+                                <h6 class="mb-1">Configuration</h6>
+                                <p class="text-muted small mb-0"><code>src/main/resources/application.properties</code> holds runtime settings.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

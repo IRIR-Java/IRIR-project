@@ -77,14 +77,20 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     /** Find projects with status in a list of statuses. */
     List<Project> findByStatusIn(java.util.Collection<ProjectStatus> statuses);
 
-    /** Search + filter: by status and search term. */
-    @Query("SELECT p FROM Project p WHERE " +
-           "(:status IS NULL OR p.status = :status) AND " +
-           "(:term IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
+    /** Search by title or abstract, filtered by status. */
+    @Query("SELECT p FROM Project p WHERE p.status = :status AND " +
+           "(LOWER(p.title) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
            "LOWER(p.abstractText) LIKE LOWER(CONCAT('%', :term, '%')))" +
            " ORDER BY p.createdAt DESC")
-    List<Project> findFilteredProjects(@Param("status") ProjectStatus status,
-                                       @Param("term") String term);
+    List<Project> findByStatusAndSearchTerm(@Param("status") ProjectStatus status,
+                                            @Param("term") String term);
+
+    /** Search by title or abstract (all statuses). */
+    @Query("SELECT p FROM Project p WHERE " +
+           "LOWER(p.title) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
+           "LOWER(p.abstractText) LIKE LOWER(CONCAT('%', :term, '%'))" +
+           " ORDER BY p.createdAt DESC")
+    List<Project> findBySearchTerm(@Param("term") String term);
 
     /** Count projects submitted this month. */
     @Query("SELECT COUNT(p) FROM Project p WHERE p.createdAt >= :startOfMonth")
