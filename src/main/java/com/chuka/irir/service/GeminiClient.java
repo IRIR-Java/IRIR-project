@@ -31,8 +31,15 @@ public class GeminiClient {
         this.objectMapper = objectMapper;
         this.restTemplate = builder
                 .setConnectTimeout(Duration.ofSeconds(10))
-                .setReadTimeout(Duration.ofSeconds(20))
+                .setReadTimeout(Duration.ofSeconds(60))
                 .build();
+
+        // Log configuration at startup so deployment issues show immediately
+        boolean keyPresent = StringUtils.hasText(properties.getApiKey());
+        logger.info("GeminiClient initialised — model={}, apiKeyPresent={}", properties.getModel(), keyPresent);
+        if (!keyPresent) {
+            logger.warn("GEMINI_API_KEY is not set — AI features will use heuristic fallback");
+        }
     }
 
     public Optional<String> generateContent(String prompt) {
