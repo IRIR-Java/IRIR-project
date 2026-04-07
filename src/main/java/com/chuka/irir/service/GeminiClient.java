@@ -40,7 +40,16 @@ public class GeminiClient {
             return Optional.empty();
         }
 
-        String url = BASE_URL + properties.getModel() + ":generateContent?key=" + properties.getApiKey();
+        String model = properties.getModel();
+        if (!StringUtils.hasText(model)) {
+            return Optional.empty();
+        }
+        model = model.trim();
+        if (model.startsWith("models/")) {
+            model = model.substring("models/".length());
+        }
+
+        String url = BASE_URL + model + ":generateContent?key=" + properties.getApiKey();
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("contents", List.of(

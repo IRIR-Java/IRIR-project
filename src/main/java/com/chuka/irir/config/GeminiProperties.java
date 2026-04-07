@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 public class GeminiProperties {
 
     private String apiKey;
-    private String model = "gemini-1.5-flash";
+    private String model = "gemini-2.5-flash";
     private double temperature = 0.3;
     private int maxOutputTokens = 600;
 
